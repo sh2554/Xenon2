@@ -1103,24 +1103,18 @@ export const useAppStore = create((set, get) => ({
 joinClassByCode: async (classCode) => {
   const { user } = get();
   const trimmed = classCode.trim().toUpperCase();
-  console.log("[v0] joinClassByCode - trimmed code:", trimmed, "user:", user?.id);
   const { data: cls, error: clsError } = await supabase.from("classes").select("id").eq("class_code", trimmed).single();
-  console.log("[v0] joinClassByCode - class lookup result:", cls, "error:", clsError);
   if (clsError || !cls) throw new Error("Class code not found.");
-  const { data: memberData, error: memberError } = await supabase.from("class_members").upsert({ class_id: cls.id, student_id: user.id }, { onConflict: "class_id,student_id" }).select();
-  console.log("[v0] joinClassByCode - upsert result:", memberData, "error:", memberError);
+  const { error: memberError } = await supabase.from("class_members").upsert({ class_id: cls.id, student_id: user.id }, { onConflict: "class_id,student_id" }).select();
   if (memberError) throw new Error(memberError.message || "Could not join class.");
   await get().loadStudentClass();
-  console.log("[v0] joinClassByCode - loadStudentClass complete, enrolledClass:", get().enrolledClass);
 },
 
 loadStudentClass: async ({ sessionUser, profile: sessionProfile } = {}) => {
   const { user, profile } = get();
   const resolvedUser = sessionUser || user;
   const resolvedProfile = sessionProfile || profile;
-  console.log("[v0] loadStudentClass - resolvedUser:", resolvedUser?.id, "resolvedProfile role:", resolvedProfile?.role);
   if (!resolvedUser || resolvedProfile?.role !== "student") {
-    console.log("[v0] loadStudentClass - NOT a student or no user, setting enrolledClass to null");
     set({ enrolledClass: null });
     return;
   }
