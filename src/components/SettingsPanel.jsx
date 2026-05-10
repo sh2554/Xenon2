@@ -385,7 +385,10 @@ export default function SettingsPanel() {
                     <div className="mt-4 space-y-3">
                       <div className="xenon-panel-muted p-4">
                         <p className="font-semibold">{enrolledClass.name}</p>
-                        <p className="mt-1 text-sm text-[var(--muted)]">Code {enrolledClass.class_code}</p>
+                        <p className="mt-1 text-sm text-[var(--muted)]">
+                          Teacher: {enrolledClass.profiles?.first_name || enrolledClass.profiles?.username || "Unknown"}
+                        </p>
+                        <p className="mt-1 text-sm text-[var(--muted)]">Code: {enrolledClass.class_code}</p>
                       </div>
                       <button className="xenon-btn-ghost" onClick={leaveClass}>Leave Class</button>
                     </div>
