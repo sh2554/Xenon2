@@ -38,7 +38,7 @@ const FOOTER_PAGES = {
   },
 };
 
-export default function SiteFooter() {
+export default function SiteFooter({ onLogin, onSignup }) {
   const [activePage, setActivePage] = useState(null);
   const page = useMemo(() => (activePage ? FOOTER_PAGES[activePage] : null), [activePage]);
 
@@ -57,8 +57,12 @@ export default function SiteFooter() {
             <button className="xenon-btn-ghost" onClick={() => setActivePage("privacy")}>Privacy Policy</button>
           </div>
         </div>
-        <div className="mt-6 border-t border-[var(--border)] pt-4 text-sm text-[var(--muted)]">
-          Made by Shahzain Jehangiri for Seven Kings School
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border)] pt-4 text-sm text-[var(--muted)]">
+          <div className="flex items-center gap-4">
+            <p>Made by Shahzain Jehangiri for Seven Kings School</p>
+            <span className="opacity-20">|</span>
+            <p>Contact <a href="mailto:suggestions@xenoncode.xyz" className="text-[var(--accent)] hover:underline">suggestions@xenoncode.xyz</a></p>
+          </div>
         </div>
       </footer>
 

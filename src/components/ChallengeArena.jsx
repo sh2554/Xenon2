@@ -5,6 +5,12 @@ import { PRACTICE_QUESTIONS } from "../lib/practiceQuestions";
 import { getChallengeXpBreakdown, getLevelProgress } from "../lib/progression";
 import { useAppStore } from "../store/useAppStore";
 import ProfileAvatar from "./ProfileAvatar";
+import { 
+  Zap, Trophy, XCircle, Minus, Play, Clock, 
+  ChevronUp, ChevronDown, CheckCircle2, AlertCircle,
+  Sword, User, Users, History, Layout
+} from "lucide-react";
+
 
 const STORAGE_PREFIX = "xenon-challenge-session";
 
@@ -250,13 +256,14 @@ export default function ChallengeArena() {
     <motion.section className="space-y-5" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <div className="xenon-hero-panel p-6 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-5">
-          <div className="max-w-2xl">
-            <span className="xenon-pill">1v1 Python Showdown</span>
-            <h2 className="xenon-section-title mt-4 text-4xl">Challenge friends to 10 quick Python rounds and climb your level.</h2>
-            <p className="xenon-subtitle mt-4 max-w-xl text-sm sm:text-base">
-              Every correct answer earns XP. Finish the match, win the showdown, and your level badge updates across your profile.
+          <div className="max-w-2xl relative z-10">
+            <span className="xenon-pill bg-[var(--accent-soft)] text-[var(--accent)] border-none">1v1 Python Showdown</span>
+            <h2 className="xenon-section-title mt-6 text-4xl font-black">Challenge friends to 10 quick Python rounds and level up.</h2>
+            <p className="xenon-subtitle mt-4 max-w-xl text-base opacity-80">
+              Every correct answer earns XP. Win the showdown to boost your ranking and unlock new status badges.
             </p>
           </div>
+
           <div className="challenge-progress-card">
             <p className="xenon-kicker">Your Progress</p>
             <p className="mt-3 text-3xl font-bold">Level {levelProgress.level}</p>
@@ -298,9 +305,14 @@ export default function ChallengeArena() {
                           <p className="text-sm text-[var(--muted)]">@{entry.friend.username} · Level {entry.friend.level || 1}</p>
                         </div>
                       </div>
-                      <button className="xenon-btn" disabled={locked} onClick={() => sendChallenge(entry.friend.id)}>
-                        {locked ? "Open challenge exists" : "Challenge Friend"}
+                      <button 
+                        className={clsx("xenon-btn h-10 px-4", locked && "opacity-50 cursor-not-allowed")}
+                        disabled={locked} 
+                        onClick={() => sendChallenge(entry.friend.id)}
+                      >
+                        {locked ? "Match Active" : "Challenge"}
                       </button>
+
                     </div>
                   );
                 })}
@@ -440,14 +452,27 @@ export default function ChallengeArena() {
 
                 <div className="space-y-3">
                   {blocks.map((line, index) => (
-                    <div key={`${line}-${index}`} className="xenon-panel-muted flex items-center gap-3 p-3">
+                    <div key={`${line}-${index}`} className="xenon-panel-muted flex items-center gap-3 p-3 group">
                       <span className="challenge-line-number">{index + 1}</span>
                       <code className="xenon-code flex-1 text-sm">{line}</code>
-                      <div className="flex gap-2">
-                        <button className="xenon-btn-subtle" disabled={index === 0} onClick={() => moveBlock(index, index - 1)}>Up</button>
-                        <button className="xenon-btn-subtle" disabled={index === blocks.length - 1} onClick={() => moveBlock(index, index + 1)}>Down</button>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          className="p-1.5 rounded-lg hover:bg-[var(--accent-soft)] text-[var(--muted)] hover:text-[var(--accent)] transition-colors disabled:opacity-30" 
+                          disabled={index === 0} 
+                          onClick={() => moveBlock(index, index - 1)}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </button>
+                        <button 
+                          className="p-1.5 rounded-lg hover:bg-[var(--accent-soft)] text-[var(--muted)] hover:text-[var(--accent)] transition-colors disabled:opacity-30" 
+                          disabled={index === blocks.length - 1} 
+                          onClick={() => moveBlock(index, index + 1)}
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
+
                   ))}
                 </div>
 

@@ -15,6 +15,12 @@ import ProfileAvatar from "./components/ProfileAvatar";
 import AchievementsPanel from "./components/AchievementsPanel";
 import { getLevelProgress, getRankBadge } from "./lib/progression";
 import { useAppStore } from "./store/useAppStore";
+import { 
+  Home, Code, BookOpen, FolderOpen, Trophy, Settings, 
+  LogOut, Menu, X, Zap, Flame, Star, Award, ChevronRight,
+  User, LayoutDashboard, Target
+} from "lucide-react";
+
 
 const motionProps = {
   initial: { opacity: 0, y: 8 },
@@ -71,60 +77,92 @@ function LoadingScreen() {
 function HomeView({ profile, enrolledClass, projectsCount, challengeCount, onNavigate }) {
   const levelProgress = getLevelProgress(profile?.experience_points || 0);
   const rankBadge = getRankBadge(enrolledClass?.rank);
+  
   return (
-    <motion.section className="space-y-4" {...motionProps}>
-      <div className="xenon-hero-panel p-6 sm:p-8">
-        <span className="xenon-pill">School Workspace</span>
-        <h1 className="xenon-section-title mt-5 font-bold">A brighter classroom for Python practice, projects, and class progress.</h1>
-        <p className="xenon-subtitle mt-4 max-w-2xl text-sm sm:text-base">
-          Write code, run it instantly, save your projects, tackle a larger practice bank, and now challenge friends in 10-question Python showdowns.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button className="xenon-btn" onClick={() => onNavigate("code")}>Open Code</button>
-          <button className="xenon-btn-ghost" onClick={() => onNavigate("theory")}>Open Theory</button>
-          <button className="xenon-btn-ghost" onClick={() => onNavigate("projects")}>View Saved Projects</button>
-          {profile?.role === "student" ? <button className="xenon-btn-ghost" onClick={() => onNavigate("challenge")}>Open 1v1</button> : null}
+    <motion.section className="space-y-6" {...motionProps}>
+      {/* Welcome Banner */}
+      <div className="xenon-hero-panel relative overflow-hidden p-8 sm:p-10">
+        <div className="absolute top-0 right-0 -m-8 h-64 w-64 rounded-full bg-[var(--accent)] opacity-[0.05] blur-3xl" />
+        <div className="relative z-10">
+          <span className="xenon-pill bg-[var(--accent-soft)] text-[var(--accent)] border-none">Student Workspace</span>
+          <h1 className="text-4xl font-black mt-6 tracking-tight">Welcome back, {profile?.first_name || "Coder"}!</h1>
+          <p className="xenon-subtitle mt-4 max-w-2xl text-base opacity-80">
+            You've spent {formatPracticeTime(enrolledClass?.total_time_seconds || 0)} practicing Python this week. Keep up the great work!
+          </p>
+          <div className="mt-8 flex flex-wrap gap-4">
+            <button className="xenon-btn h-12 px-6" onClick={() => onNavigate("code")}>
+              <Code className="mr-2 h-4 w-4" /> Continue Coding
+            </button>
+            <button className="xenon-btn-ghost h-12 px-6" onClick={() => onNavigate("theory")}>
+              <BookOpen className="mr-2 h-4 w-4" /> View Theory
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="xenon-panel p-5">
-          <p className="xenon-kicker">Your Role</p>
-          <p className="mt-3 text-xl font-semibold capitalize">{profile?.role || "none"}</p>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            {profile?.role === "teacher"
-              ? "You can create classes and manage students."
-              : profile?.role === "student"
-                ? "You can work on projects and join a class."
-                : "Choose a role in Settings when you are ready."}
-          </p>
-        </div>
-        <div className="xenon-panel p-5">
-          <p className="xenon-kicker">Saved Projects</p>
-          <p className="mt-3 text-xl font-semibold">{projectsCount}</p>
-          <p className="mt-2 text-sm text-[var(--muted)]">Your code files are saved here so you can come back later.</p>
-        </div>
-        <div className="xenon-panel p-5">
-          <p className="xenon-kicker">Level Progress</p>
-          <p className="mt-3 text-xl font-semibold">Level {levelProgress.level}</p>
-          <p className="mt-2 text-sm text-[var(--muted)]">{profile?.experience_points || 0} XP total</p>
-          <div className="challenge-progress-track mt-4">
-            <span style={{ width: `${levelProgress.percent}%` }} />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="xenon-panel group p-6 transition-all hover:border-[var(--accent)]">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Level Progress</p>
+            <Star className="h-4 w-4 text-amber-400" />
+          </div>
+          <p className="mt-4 text-3xl font-black">Level {levelProgress.level}</p>
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-[var(--muted)]">
+              <span>{profile?.experience_points || 0} XP</span>
+              <span>Next Level</span>
+            </div>
+            <div className="challenge-progress-track mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--panel-soft)]">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-[var(--accent)] to-sky-400"
+                initial={{ width: 0 }}
+                animate={{ width: `${levelProgress.percent}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+              />
+            </div>
           </div>
         </div>
-        <div className="xenon-panel p-5">
-          <p className="xenon-kicker">Class Status</p>
-          <p className="mt-3 text-xl font-semibold">{enrolledClass ? enrolledClass.name : "Not connected"}</p>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            {enrolledClass ? `Class code: ${enrolledClass.class_code}` : "Connect to a class from the Settings button in the header."}
-          </p>
-          {rankBadge ? <span className="xenon-badge mt-3">{rankBadge.icon} {rankBadge.label}</span> : null}
-          {profile?.role === "student" ? <p className="mt-2 text-xs text-[var(--muted)]">{challengeCount} challenge{challengeCount === 1 ? "" : "s"} in your feed</p> : null}
+
+        <div className="xenon-panel p-6">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Class Rank</p>
+            <Trophy className="h-4 w-4 text-[var(--accent)]" />
+          </div>
+          <p className="mt-4 text-3xl font-black">{enrolledClass?.rank ? `#${enrolledClass.rank}` : "---"}</p>
+          <div className="mt-4 flex items-center gap-2">
+            {rankBadge ? (
+              <span className="flex items-center gap-1.5 rounded-full bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-bold text-[var(--accent)]">
+                <Award className="h-3 w-3" /> {rankBadge.label}
+              </span>
+            ) : (
+              <span className="text-[10px] font-medium text-[var(--muted)]">No rank assigned yet</span>
+            )}
+          </div>
+        </div>
+
+        <div className="xenon-panel p-6">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Saved Work</p>
+            <FolderOpen className="h-4 w-4 text-sky-400" />
+          </div>
+          <p className="mt-4 text-3xl font-black">{projectsCount}</p>
+          <p className="mt-2 text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Python Projects</p>
+        </div>
+
+        <div className="xenon-panel p-6">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">1v1 Battles</p>
+            <Zap className="h-4 w-4 text-amber-400" />
+          </div>
+          <p className="mt-4 text-3xl font-black">{challengeCount}</p>
+          <p className="mt-2 text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Active Challenges</p>
         </div>
       </div>
     </motion.section>
   );
 }
+
+
 
 function SavedProjects({ onOpenIde }) {
   const { projects, openProject, loadProjects, newProject } = useAppStore();
@@ -152,25 +190,39 @@ function SavedProjects({ onOpenIde }) {
       </div>
 
       {!projects.length ? (
-        <div className="xenon-panel-muted mt-6 p-5">
-          <p className="text-sm text-[var(--muted)]">You have no saved projects yet.</p>
+        <div className="xenon-panel-muted mt-6 p-10 flex flex-col items-center text-center">
+          <div className="h-16 w-16 rounded-2xl bg-[var(--panel-soft)] flex items-center justify-center mb-4">
+            <FolderOpen className="h-8 w-8 text-[var(--muted)]" />
+          </div>
+          <p className="font-bold">No projects yet</p>
+          <p className="mt-1 text-sm text-[var(--muted)] max-w-xs">
+            Start your first Python project to see it listed here. Your code is saved automatically as you type.
+          </p>
         </div>
       ) : (
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {projects.map((project) => (
             <button
               key={project.id}
-              className="xenon-panel-muted p-4 text-left"
+              className="xenon-panel-muted group flex items-center gap-4 p-4 text-left transition hover:border-[var(--accent)]"
               onClick={() => {
                 openProject(project);
                 onOpenIde();
               }}
             >
-              <h3 className="font-semibold">{project.title}</h3>
-              <p className="mt-1 text-xs text-[var(--muted)]">{new Date(project.updated_at).toLocaleString()}</p>
-              <pre className="xenon-code mt-3 overflow-hidden text-xs text-[var(--muted)]">{project.snippet || "# Empty file"}</pre>
+              <div className="h-12 w-12 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)] group-hover:scale-110 transition-transform">
+                <Code className="h-6 w-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-black">{project.title || "Untitled Project"}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)] mt-0.5">
+                  Edited {new Date(project.updated_at).toLocaleDateString()}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-[var(--muted)] opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
             </button>
           ))}
+
         </div>
       )}
     </motion.section>
@@ -208,13 +260,17 @@ function StudentClassView() {
           </div>
           {(streak?.current || 0) > 0 ? (
             <div className="xenon-panel-muted flex items-center gap-3 p-4">
-              <span className="text-3xl leading-none">{streak.current >= 7 ? "⚡" : "🔥"}</span>
+              <div className="relative">
+                <Flame className={clsx("h-8 w-8", streak.current >= 7 ? "text-amber-400" : "text-orange-500")} />
+                {streak.current >= 7 && <Zap className="absolute -top-1 -right-1 h-4 w-4 text-sky-400" />}
+              </div>
               <div>
-                <p className="text-lg font-bold">{streak.current}-day streak</p>
-                <p className="text-xs text-[var(--muted)]">Longest: {streak.longest} days</p>
+                <p className="text-lg font-black leading-none">{streak.current} Day Streak</p>
+                <p className="mt-1 text-[10px] font-bold uppercase text-[var(--muted)]">Best: {streak.longest}</p>
               </div>
             </div>
           ) : null}
+
         </div>
       </div>
 
@@ -413,28 +469,26 @@ function AchievementsView() {
     </motion.div>
   );
 }
-
 export default function App() {
-  const {
-    user,
-    profile,
-    authHydrated,
-    enrolledClass,
-    projects,
-    friendChallenges,
-    showInitOverlay,
-    showProfileSetup,
-    bootstrap,
-    recoverAuthState,
-    loadTeacherClasses,
-    loadStudentClass,
-    initAuthListener,
-    cleanupAuthListener,
-    signOut,
-    streak,
-    databaseWarnings,
-  } = useAppStore();
+  const user = useAppStore((s) => s.user);
+  const profile = useAppStore((s) => s.profile);
+  const authHydrated = useAppStore((s) => s.authHydrated);
+  const enrolledClass = useAppStore((s) => s.enrolledClass);
+  const projects = useAppStore((s) => s.projects);
+  const friendChallenges = useAppStore((s) => s.friendChallenges);
+  const showInitOverlay = useAppStore((s) => s.showInitOverlay);
+  const showProfileSetup = useAppStore((s) => s.showProfileSetup);
+  const bootstrap = useAppStore((s) => s.bootstrap);
+  const recoverAuthState = useAppStore((s) => s.recoverAuthState);
+  const loadTeacherClasses = useAppStore((s) => s.loadTeacherClasses);
+  const loadStudentClass = useAppStore((s) => s.loadStudentClass);
+  const initAuthListener = useAppStore((s) => s.initAuthListener);
+  const cleanupAuthListener = useAppStore((s) => s.cleanupAuthListener);
+  const signOut = useAppStore((s) => s.signOut);
+  const streak = useAppStore((s) => s.streak);
+  const databaseWarnings = useAppStore((s) => s.databaseWarnings);
   const [tab, setTab] = useState("home");
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     bootstrap();
@@ -454,100 +508,203 @@ export default function App() {
     if (profile?.role === "student") loadStudentClass();
   }, [profile?.role, loadTeacherClasses, loadStudentClass]);
 
-  const navigation = [
-    { id: "home", label: "Home" },
-    { id: "code", label: "Code" },
-    { id: "theory", label: "Theory" },
-    { id: "projects", label: "Projects" },
-    { id: "parsons", label: "Practise Python Skills" },
-    ...(profile?.role === "student" ? [{ id: "challenge", label: "1v1 Showdown" }] : []),
-    ...(profile?.role === "student" ? [{ id: "achievements", label: "Achievements" }] : []),
-    ...(profile?.role === "teacher" ? [{ id: "class", label: "Classes" }] : []),
-    ...(profile?.role === "student" ? [{ id: "view-class", label: "My Class" }] : []),
+  const navItems = [
+    { id: "home", label: "Dashboard", icon: LayoutDashboard },
+    { id: "code", label: "Python IDE", icon: Code },
+    { id: "theory", label: "Theory Hub", icon: BookOpen },
+    { id: "projects", label: "My Projects", icon: FolderOpen },
+    { id: "parsons", label: "Skills Lab", icon: Target },
+    ...(profile?.role === "student" ? [{ id: "challenge", label: "1v1 Battles", icon: Zap }] : []),
+    ...(profile?.role === "student" ? [{ id: "achievements", label: "Achievements", icon: Award }] : []),
+    { id: "class", label: profile?.role === "teacher" ? "Class Manager" : "My Class", icon: Home },
+    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   if (!authHydrated) return <LoadingScreen />;
   if (!user) return <AuthGate initialMode="landing" />;
 
-  const studentRank = profile?.role === "student" ? enrolledClass?.rank : null;
-  const rankBadge = getRankBadge(studentRank);
+  const currentNav = navItems.find(n => n.id === tab);
   const levelProgress = getLevelProgress(profile?.experience_points || 0);
-  const displayName = profile?.first_name || profile?.username || "User";
 
   return (
-    <div className="xenon-shell">
-      {showInitOverlay ? <InitOverlay /> : null}
-      {showProfileSetup ? <ProfileSetupModal /> : null}
+    <div className="flex h-screen overflow-hidden bg-[var(--bg)] text-[var(--fg)]">
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div 
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
-      <motion.header className="xenon-header sticky top-0 z-30" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="mx-auto max-w-screen-xl px-4 md:px-6">
-          <div className="flex items-center justify-between gap-4 py-3">
-            <div className="flex items-center gap-3">
-              <img src="/xenon-logo.svg" alt="Xenon Code logo" className="h-9 w-9 rounded-lg" />
-              <div>
-                <span className="text-base font-bold tracking-tight">Xenon Code</span>
-                <span className="ml-2 hidden text-xs font-medium text-[var(--muted)] sm:inline">GCSE Python Learning</span>
-              </div>
+      {/* Sidebar Navigation */}
+      <motion.aside 
+        className={clsx(
+          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-[var(--border)] bg-[var(--panel)] transition-transform lg:static lg:translate-x-0",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex h-20 items-center gap-3 px-6">
+          <img src="/xenon-logo.svg" alt="Xenon" className="h-10 w-10 rounded-xl" />
+          <span className="text-xl font-black tracking-tight">XENON CODE</span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-2 custom-scrollbar">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                setTab(item.id);
+                setSidebarOpen(false);
+              }}
+              className={clsx(
+                "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all",
+                tab === item.id 
+                  ? "bg-[var(--accent-soft)] text-[var(--accent)] shadow-inner" 
+                  : "text-[var(--muted)] hover:bg-[var(--panel-soft)] hover:text-[var(--fg)]"
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.label}
+              {tab === item.id && <motion.div layoutId="nav-active" className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />}
+            </button>
+          ))}
+        </div>
+
+        {/* User Card in Sidebar */}
+        <div className="mt-auto p-4 border-t border-[var(--border)]">
+          <div className="xenon-panel-muted flex items-center gap-3 p-3">
+            <ProfileAvatar name={profile?.full_name || profile?.username} avatarUrl={profile?.avatar_url} size="sm" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold">{profile?.first_name || profile?.username || "Coder"}</p>
+              <p className="truncate text-[10px] font-medium text-[var(--muted)] uppercase tracking-wider">{profile?.role || "Student"}</p>
             </div>
-
-            <div className="flex items-center gap-3">
-              {(streak?.current || 0) >= 2 ? (
-                <span className="xenon-badge hidden items-center gap-1 sm:inline-flex" title={`${streak.current}-day login streak`}>
-                  {streak.current >= 7 ? "⚡" : "🔥"} {streak.current}d
-                </span>
-              ) : null}
-              <span className="xenon-badge hidden sm:inline-flex">Lvl {levelProgress.level}</span>
-              {rankBadge ? <span className="text-xl leading-none" title={`Rank #${studentRank} in your class`}>{rankBadge.icon}</span> : null}
-              <div className="flex items-center gap-2">
-                <ProfileAvatar name={displayName} avatarUrl={profile?.avatar_url} size="md" />
-                <div className="hidden text-right sm:block">
-                  <p className="text-sm font-semibold leading-tight">{displayName}</p>
-                  <p className="text-xs capitalize leading-tight text-[var(--muted)]">
-                    {profile?.role || "no role"}
-                    {studentRank ? ` · Rank #${studentRank}` : ""}
-                  </p>
-                </div>
-              </div>
-              <button className="xenon-btn-subtle text-sm" onClick={() => setTab("settings")}>Settings</button>
-              <button className="xenon-btn-ghost text-sm" onClick={signOut}>Sign Out</button>
-            </div>
-          </div>
-
-          <div className="flex gap-1 overflow-x-auto pb-0" style={{ borderTop: "1px solid var(--border)" }}>
-            {navigation.map((item) => (
-              <button key={item.id} className="xenon-nav-tab" data-active={tab === item.id} onClick={() => setTab(item.id)}>
-                {item.label}
-              </button>
-            ))}
+            <button 
+              onClick={signOut}
+              className="rounded-lg p-2 text-[var(--muted)] hover:bg-red-500/10 hover:text-red-400 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
-      </motion.header>
+      </motion.aside>
 
-      <div className="mx-auto max-w-screen-xl px-4 py-5 md:px-6">
-        {Object.keys(databaseWarnings || {}).length > 0 ? (
-          <div className="xenon-panel mb-4 border-amber-400/30 bg-amber-500/10 p-4">
-            <p className="text-sm font-semibold text-amber-200">Database setup still needs one Supabase migration.</p>
-            <p className="mt-1 text-sm text-amber-100/90">
-              Run the SQL in <code>supabase_migrations.sql</code>, then refresh. Until then, announcements, assignment targets, friend challenges, and student progression may stay unavailable.
-            </p>
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Header */}
+        <header className="flex h-20 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--panel)] px-6 lg:px-10 sticky top-0 z-20 backdrop-blur-md">
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 -ml-2 text-[var(--muted)] hover:text-[var(--fg)]"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+            <div className="flex items-center gap-4">
+              <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-[var(--accent-soft)] rounded-lg">
+                <LayoutDashboard className="h-4 w-4 text-[var(--accent)]" />
+                <span className="text-xs font-black text-[var(--accent)] uppercase tracking-widest">Dashboard</span>
+              </div>
+              <div className="h-8 w-px bg-[var(--border)] hidden lg:block" />
+              <div>
+                <h2 className="text-lg font-black tracking-tight">{currentNav?.label || "Workspace"}</h2>
+                <p className="hidden text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] md:block">
+                  Portal / {currentNav?.id || "dashboard"}
+                </p>
+              </div>
+            </div>
           </div>
-        ) : null}
 
-        <AnimatePresence mode="wait">
-          {tab === "home" ? <HomeView key="home" profile={profile} enrolledClass={enrolledClass} projectsCount={projects.length} challengeCount={friendChallenges.length} onNavigate={setTab} /> : null}
-          {tab === "code" ? <motion.div key="code" {...motionProps}><XenonIDE /></motion.div> : null}
-          {tab === "theory" ? <motion.div key="theory" {...motionProps}><TheoryPanel /></motion.div> : null}
-          {tab === "projects" ? <SavedProjects key="projects" onOpenIde={() => setTab("code")} /> : null}
-          {tab === "parsons" ? <motion.div key="parsons" {...motionProps}><ParsonsProblem /></motion.div> : null}
-          {tab === "challenge" && profile?.role === "student" ? <motion.div key="challenge" {...motionProps}><ChallengeArena /></motion.div> : null}
-          {tab === "achievements" && profile?.role === "student" ? <AchievementsView key="achievements" /> : null}
-          {tab === "settings" ? <motion.div key="settings" {...motionProps}><SettingsPanel /></motion.div> : null}
-          {tab === "class" && profile?.role === "teacher" ? <motion.div key="class" {...motionProps}><ClassDashboard /></motion.div> : null}
-          {tab === "view-class" && profile?.role === "student" ? <StudentClassView key="view-class" /> : null}
-        </AnimatePresence>
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-3">
+              {(streak?.current || 0) > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20 shadow-sm transition-transform hover:scale-105 cursor-default">
+                  <Flame className="h-4 w-4 fill-current" />
+                  <span className="text-sm font-black">{streak.current}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent-soft)] shadow-sm transition-transform hover:scale-105 cursor-default">
+                <Star className="h-4 w-4 fill-current" />
+                <span className="text-sm font-black">Level {levelProgress.level}</span>
+              </div>
+            </div>
 
-        <SiteFooter />
-      </div>
+            <div className="h-8 w-px bg-[var(--border)] hidden sm:block mx-2" />
+
+            <button className="flex items-center gap-3 hover:opacity-80 transition-opacity" onClick={() => setTab("settings")}>
+              <div className="text-right hidden md:block">
+                <p className="text-xs font-black leading-none">{profile?.first_name || "User"}</p>
+                <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mt-1">Settings</p>
+              </div>
+              <ProfileAvatar name={profile?.full_name || profile?.username} avatarUrl={profile?.avatar_url} size="sm" />
+            </button>
+          </div>
+        </header>
+
+        {/* View Content */}
+        <div className="flex-1 overflow-y-auto p-6 lg:p-10 custom-scrollbar relative">
+          <div className="mx-auto max-w-7xl pb-20">
+            <AnimatePresence mode="wait">
+              {tab === "home" && (
+                <HomeView 
+                  key="home"
+                  profile={profile} 
+                  enrolledClass={enrolledClass} 
+                  projectsCount={projects.length}
+                  challengeCount={friendChallenges.length}
+                  onNavigate={setTab} 
+                />
+              )}
+              {tab === "code" && <motion.div key="code" {...motionProps}><XenonIDE /></motion.div>}
+              {tab === "theory" && <motion.div key="theory" {...motionProps}><TheoryPanel /></motion.div>}
+              {tab === "projects" && <SavedProjects key="projects" onOpenIde={() => setTab("code")} />}
+              {tab === "parsons" && <motion.div key="parsons" {...motionProps}><ParsonsProblem /></motion.div>}
+              {tab === "challenge" && profile?.role === "student" && <motion.div key="challenge" {...motionProps}><ChallengeArena /></motion.div>}
+              {tab === "achievements" && profile?.role === "student" && <AchievementsView key="achievements" />}
+              {tab === "class" && (
+                profile?.role === "teacher" 
+                  ? <motion.div key="class" {...motionProps}><ClassDashboard /></motion.div> 
+                  : <StudentClassView key="view-class" />
+              )}
+              {tab === "settings" && <motion.div key="settings" {...motionProps}><SettingsPanel /></motion.div>}
+            </AnimatePresence>
+          </div>
+
+          <SiteFooter />
+        </div>
+      </main>
+
+      {showInitOverlay && <InitOverlay onBootstrap={bootstrap} />}
+      {showProfileSetup && (
+        <ProfileSetupModal 
+          profile={profile} 
+          onRecover={recoverAuthState}
+          onRefresh={() => location.reload()} 
+        />
+      )}
+
+
+      {/* Database Warnings Portal */}
+      {Object.keys(databaseWarnings || {}).length > 0 && (
+        <div className="fixed bottom-6 right-6 z-[100] max-w-sm pointer-events-none">
+          <div className="xenon-panel border-amber-500/50 bg-amber-500/10 p-5 shadow-2xl backdrop-blur-xl pointer-events-auto">
+            <div className="flex gap-3">
+              <Target className="h-5 w-5 text-amber-500 shrink-0" />
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-amber-500">System Warning</p>
+                <p className="mt-2 text-[11px] text-amber-200/80 leading-relaxed font-medium">
+                  Database migration required. Run the SQL in <code className="bg-black/20 px-1 rounded">supabase_migrations.sql</code> to enable all portal features.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

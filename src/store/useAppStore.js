@@ -411,9 +411,16 @@ export const useAppStore = create((set, get) => ({
     const hasFallbackUsername = (profile.username || "").startsWith("xenonuser");
     const missingBasics = !profile.full_name || !profile.username;
     const missingRole = profile.role === "none";
-    if (provider === "google") return hasFallbackUsername || missingBasics || missingRole;
-    return missingBasics;
+
+    // Everyone needs a role and basic info
+    if (missingRole || missingBasics) return true;
+    
+    // Google users often need to change their random generated username
+    if (provider === "google") return hasFallbackUsername;
+    
+    return false;
   },
+
 
   initAuthListener: () => {
     if (get().authSubscription) return;
@@ -471,7 +478,9 @@ export const useAppStore = create((set, get) => ({
       set({ profile: draftProfile, showInitOverlay: false, showProfileSetup: true });
       return draftProfile;
     }
-    const normalized = normalizeProfileRecord(data);
+    const md = user.user_metadata || {};
+    const normalized = normalizeProfileRecord(data, md);
+
     set({
       profile: normalized,
       showInitOverlay: !normalized.has_seen_init,
@@ -526,13 +535,16 @@ export const useAppStore = create((set, get) => ({
   },
 
   signUp: async ({ email, password, firstName, fullName, username, role }) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { first_name: firstName, full_name: fullName, username, role },
-      },
-    });
+    const { data, error } = await withTimeout(
+      supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { first_name: firstName, full_name: fullName, username, role },
+        },
+      }),
+      12000 // Give it 12 seconds since SMTP can be slow
+    );
     if (error) throw error;
     if (data.session?.user) {
       get().startUserHydration(data.session.user);

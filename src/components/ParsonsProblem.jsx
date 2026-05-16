@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppStore } from "../store/useAppStore";
+import { Shuffle, Zap, Terminal, Trophy, ChevronRight, LayoutGrid } from "lucide-react";
 import { PRACTICE_QUESTIONS } from "../lib/practiceQuestions";
 
 const DIFFICULTY_COLOURS = {
@@ -189,120 +190,99 @@ export default function ParsonsProblem() {
 
   return (
     <>
-      <motion.section className="space-y-5" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="xenon-hero-panel p-6 sm:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="max-w-3xl">
-              <span className="xenon-pill">Practice Studio</span>
-              <h2 className="xenon-section-title mt-4">A bigger school-style question bank with cleaner browsing and faster starts.</h2>
-              <p className="xenon-subtitle mt-3 text-sm sm:text-base">
-                Expand a question to preview it, pick the right topic faster, then rearrange the code into the correct Python order.
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="xenon-metric">
-                <p className="xenon-kicker">Completed</p>
-                <p className="mt-2 text-2xl font-bold">{completedCount}</p>
-                <p className="mt-1 text-xs text-[var(--muted)]">Challenges recorded</p>
-              </div>
-              <div className="xenon-metric">
-                <p className="xenon-kicker">Session Time</p>
-                <p className="mt-2 text-2xl font-bold">{formatPracticeTime(sessionSeconds)}</p>
-                <p className="mt-1 text-xs text-[var(--muted)]">Tracked while this tab is active</p>
-              </div>
-            </div>
+      <motion.section className="space-y-6 pb-12" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="xenon-panel p-8 sm:p-12 relative overflow-hidden bg-gradient-to-br from-[var(--bg-soft)] to-transparent">
+          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+            <Shuffle className="h-64 w-64" />
           </div>
-
-          {questionGoalAssignments.length > 0 && (
-            <div className="mt-5 xenon-school-banner p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="xenon-kicker">Teacher Targets</p>
-                  <p className="mt-1 text-sm text-[var(--muted)]">Assignments can now include question goals. Keep practicing and then submit from My Class.</p>
+          
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-12">
+            <div className="max-w-3xl">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="xenon-pill bg-[var(--accent-soft)] text-[var(--accent)] border-none px-4 py-1.5 flex items-center gap-2 font-black">
+                  <Zap className="h-4 w-4" />
+                  PRACTICE STUDIO
+                </span>
+                <span className="xenon-pill bg-purple-500/10 text-purple-500 border-none px-4 py-1.5 font-black uppercase tracking-widest text-[10px]">
+                  Syntax Logic Lab
+                </span>
+              </div>
+              <h2 className="mt-8 text-4xl font-black tracking-tight sm:text-6xl leading-[1.1]">The Skills Lab</h2>
+              <p className="mt-6 text-xl text-[var(--muted)] font-medium leading-relaxed">
+                Refine your Python structure and logic. Reorder code blocks to build functional programs and earn experience points for your class leaderboard.
+              </p>
+              
+              <div className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-6">
+                <div className="xenon-panel-muted p-6 border-none bg-white/40">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-2">Completed</p>
+                  <p className="text-3xl font-black">{completedCount}</p>
+                  <div className="mt-3 h-1 w-full bg-black/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-[var(--accent)]" style={{ width: `${(completedCount / PRACTICE_QUESTIONS.length) * 100}%` }} />
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {questionGoalAssignments.slice(0, 3).map((assignment) => (
-                    <span key={assignment.id} className="xenon-badge">
-                      {assignment.title}: {assignment.question_goal} questions
-                    </span>
-                  ))}
+                <div className="xenon-panel-muted p-6 border-none bg-white/40">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-2">Practice Time</p>
+                  <p className="text-3xl font-black">{formatPracticeTime(sessionSeconds)}</p>
+                  <p className="mt-1 text-[10px] font-bold text-[var(--muted)]">Active session tracking</p>
+                </div>
+                <div className="xenon-panel-muted p-6 border-none bg-white/40 col-span-2 md:col-span-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-2">Lab Uptime</p>
+                  <p className="text-3xl font-black">100%</p>
+                  <p className="mt-1 text-[10px] font-bold text-[var(--success)]">Connected to Server</p>
                 </div>
               </div>
             </div>
-          )}
-
-          <div className="mt-5">
-            <div className="h-3 w-full overflow-hidden rounded-full border border-[var(--border)] bg-[var(--panel-soft)]">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${(completedCount / PRACTICE_QUESTIONS.length) * 100}%`, background: "linear-gradient(90deg, var(--accent), #60a5fa)" }}
-              />
-            </div>
-            <p className="mt-2 text-xs text-[var(--muted)]">
-              {Math.round((completedCount / PRACTICE_QUESTIONS.length) * 100)}% of the question bank completed
-            </p>
           </div>
         </div>
 
-        <div className="xenon-panel p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="xenon-panel p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <h3 className="text-xl font-semibold">Question Bank</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">Search, filter, preview, and expand a question before opening it.</p>
+              <h3 className="text-2xl font-black tracking-tight">Access Question Bank</h3>
+              <p className="mt-2 text-[var(--muted)] font-medium">Browse by exam board topics or difficulty level.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="xenon-badge">{filteredStats.total} matches</span>
-              <span className="xenon-badge">{filteredStats.completed} solved</span>
-              <button className="xenon-btn-subtle" onClick={() => setQuestionBankExpanded((value) => !value)}>
-                {questionBankExpanded ? "Collapse List" : "Expand List"}
+              <span className="xenon-pill bg-[var(--panel-muted)] border-none px-4 py-1.5 flex items-center gap-2 text-xs font-black">
+                <LayoutGrid className="h-3.5 w-3.5" />
+                {filteredStats.total} CHALLENGES
+              </span>
+              <span className="xenon-pill bg-green-500/10 text-green-500 border-none px-4 py-1.5 flex items-center gap-2 text-xs font-black">
+                <Trophy className="h-3.5 w-3.5" />
+                {filteredStats.completed} SOLVED
+              </span>
+              <button 
+                className="xenon-btn-subtle h-9 px-4 text-xs font-black uppercase tracking-widest" 
+                onClick={() => setQuestionBankExpanded((value) => !value)}
+              >
+                {questionBankExpanded ? "Collapse Bank" : "Expand Bank"}
               </button>
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 lg:grid-cols-[1.1fr_auto_auto]">
-            <input
-              className="xenon-input"
-              placeholder="Search by title, topic, or description"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            <select className="xenon-input" value={filterTopic} onChange={(event) => setFilterTopic(event.target.value)}>
+          <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_200px_200px]">
+            <div className="relative">
+              <input
+                className="xenon-input h-12 pl-12"
+                placeholder="Search syntax or logic challenges..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+              <Terminal className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--muted)]" />
+            </div>
+            <select className="xenon-input h-12 font-bold text-xs" value={filterTopic} onChange={(event) => setFilterTopic(event.target.value)}>
               {TOPICS.map((topic) => (
                 <option key={topic} value={topic}>
-                  {topic}
+                  {topic.toUpperCase()}
                 </option>
               ))}
             </select>
-            <select className="xenon-input" value={filterDifficulty} onChange={(event) => setFilterDifficulty(event.target.value)}>
+            <select className="xenon-input h-12 font-bold text-xs" value={filterDifficulty} onChange={(event) => setFilterDifficulty(event.target.value)}>
               {["All", "Easy", "Medium", "Hard"].map((difficulty) => (
                 <option key={difficulty} value={difficulty}>
-                  {difficulty}
+                  {difficulty.toUpperCase()}
                 </option>
               ))}
             </select>
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="xenon-panel-muted p-4">
-              <p className="xenon-kicker">Visible Now</p>
-              <p className="mt-2 text-xl font-semibold">{filteredStats.total}</p>
-              <p className="mt-1 text-xs text-[var(--muted)]">Questions matching your current filters</p>
-            </div>
-            <div className="xenon-panel-muted p-4">
-              <p className="xenon-kicker">Easy</p>
-              <p className="mt-2 text-xl font-semibold">{filteredStats.Easy}</p>
-              <p className="mt-1 text-xs text-[var(--muted)]">Quick confidence-builders</p>
-            </div>
-            <div className="xenon-panel-muted p-4">
-              <p className="xenon-kicker">Medium</p>
-              <p className="mt-2 text-xl font-semibold">{filteredStats.Medium}</p>
-              <p className="mt-1 text-xs text-[var(--muted)]">More steps and patterns</p>
-            </div>
-            <div className="xenon-panel-muted p-4">
-              <p className="xenon-kicker">Hard</p>
-              <p className="mt-2 text-xl font-semibold">{filteredStats.Hard}</p>
-              <p className="mt-1 text-xs text-[var(--muted)]">Nested logic and tougher structure</p>
-            </div>
           </div>
 
           <AnimatePresence initial={false}>
@@ -402,52 +382,56 @@ export default function ParsonsProblem() {
           </AnimatePresence>
         </div>
 
-        <div className="xenon-panel p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="xenon-panel p-8">
+          <div className="flex flex-wrap items-start justify-between gap-8 pb-8 border-b border-[var(--border)]">
             <div className="max-w-2xl">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-2xl font-semibold">{selected.title}</h3>
-                {selectedFilteredIndex >= 0 ? <span className="xenon-pill">Question {selectedFilteredIndex + 1} of {filteredSet.length}</span> : null}
-                <span className="xenon-badge">{selected.topic}</span>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)] bg-[var(--accent-soft)] px-2 py-1 rounded">Active Experiment</span>
+                <h3 className="text-3xl font-black tracking-tight">{selected.title}</h3>
+              </div>
+              <p className="mt-4 text-[var(--muted)] font-medium leading-relaxed">{selected.description}</p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <span className="xenon-pill text-[10px] font-black uppercase tracking-widest border-none bg-[var(--panel-muted)]">{selected.topic}</span>
                 <span
-                  className="rounded-full px-2 py-1 text-xs font-semibold"
-                  style={{ background: diffColour.bg, color: diffColour.text, border: `1px solid ${diffColour.border}` }}
+                  className="xenon-pill text-[10px] font-black uppercase tracking-widest border-none"
+                  style={{ background: diffColour.bg, color: diffColour.text }}
                 >
                   {selected.difficulty}
                 </span>
-                {alreadyCounted ? <span className="xenon-badge practice-done-badge">Already counted</span> : null}
+                {alreadyCounted && <span className="xenon-pill bg-green-500/10 text-green-500 border-none text-[10px] font-black uppercase tracking-widest">Mastered</span>}
               </div>
-              <p className="mt-3 text-sm text-[var(--muted)]">{selected.description}</p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <div className="xenon-panel-muted p-4">
-                <p className="xenon-kicker">Correct Lines</p>
-                <p className="mt-2 text-xl font-semibold">{correctLineCount}/{selected.lines.length}</p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="xenon-panel-muted p-4 border-none bg-[var(--panel-soft)] flex flex-col justify-center min-w-[120px]">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Precision</p>
+                <p className="text-xl font-black mt-1">{correctLineCount}/{selected.lines.length}</p>
               </div>
-              <div className="xenon-panel-muted p-4">
-                <p className="xenon-kicker">Status</p>
-                <p className="mt-2 text-xl font-semibold">{solved ? "Ready" : "In Progress"}</p>
-              </div>
-              <div className="xenon-panel-muted p-4">
-                <p className="xenon-kicker">Moves</p>
-                <p className="mt-2 text-xl font-semibold">{blocks.length}</p>
-                <p className="mt-1 text-xs text-[var(--muted)]">Use Up and Down to reorder each line</p>
+              <div className="xenon-panel-muted p-4 border-none bg-[var(--panel-soft)] flex flex-col justify-center min-w-[120px]">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Sequence</p>
+                <p className="text-xl font-black mt-1">{solved ? "SYNCED" : "UNSTABLE"}</p>
               </div>
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            <button className="xenon-btn-subtle" onClick={() => setShowOutput((value) => !value)}>
-              {showOutput ? "Hide Output" : "Show Output"}
-            </button>
-            <button className="xenon-btn-ghost" onClick={restartCurrentQuestion}>
-              Restart Question
-            </button>
-            <button className="xenon-btn-ghost" onClick={jumpToNextQuestion}>
-              Next Challenge
-            </button>
-            <button className="xenon-btn" disabled={submitting} onClick={submitAnswer}>
-              {submitting ? "Submitting..." : solved ? "Submit Answer" : "Check And Submit"}
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-2">
+              <button className="xenon-btn-subtle h-10 px-6 text-xs font-black uppercase tracking-widest" onClick={() => setShowOutput((value) => !value)}>
+                {showOutput ? "Close Buffer" : "View Output"}
+              </button>
+              <button className="xenon-btn-ghost h-10 px-6 text-xs font-black uppercase tracking-widest" onClick={restartCurrentQuestion}>
+                Reset Lab
+              </button>
+              <button className="xenon-btn-ghost h-10 px-6 text-xs font-black uppercase tracking-widest" onClick={jumpToNextQuestion}>
+                Next Test
+              </button>
+            </div>
+            <button 
+              className="xenon-btn h-12 px-8 text-xs font-black uppercase tracking-widest shadow-xl shadow-[var(--accent-soft)]" 
+              disabled={submitting} 
+              onClick={submitAnswer}
+            >
+              {submitting ? "Processing..." : solved ? "Commit Solution" : "Verify Order"}
             </button>
           </div>
 
