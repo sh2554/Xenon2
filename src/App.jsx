@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import AuthGate from "./components/AuthGate";
 import InitOverlay from "./components/InitOverlay";
 import ProfileSetupModal from "./components/ProfileSetupModal";
@@ -476,6 +477,7 @@ export default function App() {
 
   return (
     <div className="xenon-shell">
+      <SpeedInsights />
       {showInitOverlay ? <InitOverlay /> : null}
       {showProfileSetup ? <ProfileSetupModal /> : null}
 
