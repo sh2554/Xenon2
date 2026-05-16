@@ -4,10 +4,11 @@ export const XP_MATCH_WIN_BONUS = 35;
 export const XP_MATCH_DRAW_BONUS = 20;
 
 export const PODIUM_MEDALS = {
-  1: { key: "rank_1", label: "1st Place", icon: "\u{1F947}" },
-  2: { key: "rank_2", label: "2nd Place", icon: "\u{1F948}" },
-  3: { key: "rank_3", label: "3rd Place", icon: "\u{1F949}" },
+  1: { key: "rank_1", label: "1st Place" },
+  2: { key: "rank_2", label: "2nd Place" },
+  3: { key: "rank_3", label: "3rd Place" },
 };
+
 
 export const getXpForNextLevel = (level = 1) => 120 + Math.max(0, level - 1) * 40;
 
