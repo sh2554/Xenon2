@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "../store/useAppStore";
 import { supabase } from "../lib/supabase";
@@ -101,7 +101,7 @@ function ClassAnnouncementsPanel({ cls }) {
         <button className="xenon-btn self-start" onClick={submit}>Post</button>
       </div>
       {err && <p className="text-sm text-red-500">{err}</p>}
-      {databaseWarnings.announcements && (
+      {databaseWarnings?.announcements && (
         <p className="text-sm text-amber-400">{databaseWarnings.announcements}</p>
       )}
       {!announcements.length ? (
@@ -208,7 +208,7 @@ function ClassAssignmentsPanel({ cls }) {
         />
         <button className="xenon-btn" onClick={submit}>Set Assignment</button>
         {err && <p className="text-sm text-red-500">{err}</p>}
-        {databaseWarnings.assignments && <p className="text-sm text-amber-400">{databaseWarnings.assignments}</p>}
+        {databaseWarnings?.assignments && <p className="text-sm text-amber-400">{databaseWarnings.assignments}</p>}
       </div>
 
       {!assignments.length ? (
