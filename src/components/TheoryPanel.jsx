@@ -38,48 +38,54 @@ function Flashcard({ card, onKnow, onLearn, cardKey }) {
   const flip = () => setFlipped((v) => !v);
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-6">
       <div
-        className="relative w-full max-w-lg cursor-pointer"
-        style={{ perspective: "1000px", minHeight: "220px" }}
+        className="relative w-full max-w-xl cursor-pointer"
+        style={{ perspective: "1500px" }}
         onClick={flip}
       >
         <div
-          className="w-full transition-transform duration-500"
+          className="relative w-full transition-transform duration-700"
           style={{
             transformStyle: "preserve-3d",
             transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+            display: "grid",
+            gridTemplateColumns: "1fr",
+            gridTemplateRows: "1fr",
           }}
         >
           {/* Front */}
           <div
-            className="xenon-panel flex flex-col items-center justify-center gap-3 rounded-2xl p-8 text-center"
+            className="xenon-panel flex flex-col items-center justify-center gap-4 rounded-[2.5rem] p-10 text-center shadow-xl"
             style={{ 
               backfaceVisibility: "hidden",
-              minHeight: "220px"
+              gridArea: "1 / 1 / 2 / 2",
+              minHeight: "300px"
             }}
           >
-            <span className="xenon-kicker flex items-center gap-2">
-              <HelpCircle className="h-3.5 w-3.5" />
-              Question — tap to reveal
-            </span>
-            <p className="text-xl font-semibold leading-snug">{card.q}</p>
+            <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-2">
+              <HelpCircle className="h-6 w-6" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--muted)]">Question — Tap to reveal</span>
+            <p className="text-2xl font-black tracking-tight leading-tight">{card.q}</p>
           </div>
+          
           {/* Back */}
           <div
-            className="xenon-panel absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl p-8 text-center"
+            className="xenon-panel flex flex-col items-center justify-center gap-4 rounded-[2.5rem] p-10 text-center shadow-2xl"
             style={{ 
               backfaceVisibility: "hidden", 
               transform: "rotateY(180deg)", 
-              background: "var(--panel-muted)",
-              minHeight: "220px"
+              background: "linear-gradient(135deg, var(--panel-muted), var(--bg-soft))",
+              gridArea: "1 / 1 / 2 / 2",
+              minHeight: "300px"
             }}
           >
-            <span className="xenon-kicker text-green-400 flex items-center gap-2">
-              <Check className="h-3.5 w-3.5" />
-              Answer
-            </span>
-            <p className="text-lg leading-relaxed text-[var(--text)]">{card.a}</p>
+            <div className="h-12 w-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500 mb-2">
+              <Check className="h-6 w-6" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-green-500">Correct Answer</span>
+            <p className="text-xl font-bold leading-relaxed text-[var(--text)]">{card.a}</p>
           </div>
         </div>
       </div>
@@ -249,8 +255,27 @@ function QuizMode({ cards, onExit }) {
   const current = shuffledCards[currentIndex];
   const total = shuffledCards.length;
 
+  const calculateScore = (input, correct) => {
+    const clean = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const user = clean(input);
+    const target = clean(correct);
+    
+    // Exact match
+    if (user === target) return 1;
+    
+    // Keyword match
+    const keywords = correct.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const matches = keywords.filter(k => user.includes(clean(k)));
+    if (matches.length >= Math.ceil(keywords.length * 0.7)) return 1;
+    if (matches.length >= Math.ceil(keywords.length * 0.3)) return 0.5;
+    
+    return 0;
+  };
+
   const handleSubmit = () => {
     if (!showAnswer) {
+      const score = calculateScore(currentInput, current.a);
+      setSelfScore(score);
       setShowAnswer(true);
     } else {
       if (selfScore !== null) {
@@ -376,45 +401,42 @@ function QuizMode({ cards, onExit }) {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-3"
+            className="space-y-4"
           >
-            <div className="p-4 rounded-xl bg-green-400/10 border border-green-400/30">
-              <p className="text-xs text-green-400 mb-1 flex items-center gap-1">
-                <Check className="h-3 w-3" />
-                Correct Answer:
-              </p>
-              <p className="text-sm text-[var(--text)]">{current.a}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Automated Verification</span>
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                selfScore === 1 ? "bg-green-500/10 text-green-500" : selfScore === 0.5 ? "bg-yellow-500/10 text-yellow-500" : "bg-red-500/10 text-red-500"
+              }`}>
+                {selfScore === 1 ? <><Check className="h-3 w-3"/> Correct</> : selfScore === 0.5 ? <><Target className="h-3 w-3"/> Partial</> : <><X className="h-3 w-3"/> Incomplete</>}
+              </div>
+            </div>
+
+            <div className="p-5 rounded-[1.5rem] bg-[var(--accent-soft)] border border-[var(--accent)]/10">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent)] mb-2">Ideal Solution</p>
+              <p className="text-sm font-bold leading-relaxed">{current.a}</p>
             </div>
             
-            <div className="text-center">
-              <p className="text-sm text-[var(--muted)] mb-2">How did you do?</p>
-              <div className="flex justify-center gap-2">
+            <div className="text-center pt-2">
+              <p className="text-xs text-[var(--muted)] mb-3 font-black uppercase tracking-widest">Adjust Marking?</p>
+              <div className="flex justify-center gap-3">
                 <button
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
-                    selfScore === 0 ? "bg-red-400/30 border-red-400" : "bg-white/5 hover:bg-white/10"
-                  } border border-[var(--border)]`}
+                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-2 ${
+                    selfScore === 0 ? "bg-red-500/20 border-red-500 text-red-500" : "bg-[var(--panel-soft)] border-transparent text-[var(--muted)] hover:bg-[var(--panel-muted)]"
+                  }`}
                   onClick={() => setSelfScore(0)}
                 >
-                  <X className="h-4 w-4" />
-                  Wrong
+                  <X className="h-3.5 w-3.5" />
+                  Mark Wrong
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
-                    selfScore === 0.5 ? "bg-yellow-400/30 border-yellow-400" : "bg-white/5 hover:bg-white/10"
-                  } border border-[var(--border)]`}
-                  onClick={() => setSelfScore(0.5)}
-                >
-                  <Target className="h-4 w-4" />
-                  Partial
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
-                    selfScore === 1 ? "bg-green-400/30 border-green-400" : "bg-white/5 hover:bg-white/10"
-                  } border border-[var(--border)]`}
+                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-2 ${
+                    selfScore === 1 ? "bg-green-500/20 border-green-500 text-green-500" : "bg-[var(--panel-soft)] border-transparent text-[var(--muted)] hover:bg-[var(--panel-muted)]"
+                  }`}
                   onClick={() => setSelfScore(1)}
                 >
-                  <Check className="h-4 w-4" />
-                  Correct
+                  <Check className="h-3.5 w-3.5" />
+                  Mark Correct
                 </button>
               </div>
             </div>
@@ -422,19 +444,19 @@ function QuizMode({ cards, onExit }) {
         )}
 
         <button
-          className="xenon-btn w-full flex items-center justify-center gap-2"
+          className="xenon-btn w-full h-14 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-[var(--accent-soft)] transition-all active:scale-[0.98]"
           onClick={handleSubmit}
           disabled={!showAnswer ? !currentInput.trim() : selfScore === null}
         >
           {showAnswer ? (
             <>
-              <ArrowRight className="h-4 w-4" />
-              Next Question
+              <ArrowRight className="h-5 w-5" />
+              Next Experiment
             </>
           ) : (
             <>
-              <Check className="h-4 w-4" />
-              Check Answer
+              <Sparkles className="h-5 w-5" />
+              Verify Results
             </>
           )}
         </button>
@@ -726,28 +748,37 @@ function TopicDetail({ unit, onBack }) {
 function TopicCard({ unit, onClick }) {
   return (
     <motion.button
-      className="xenon-panel group w-full overflow-hidden rounded-2xl text-left transition hover:scale-[1.02]"
+      className="xenon-panel group w-full overflow-hidden rounded-3xl text-left transition-all hover:shadow-2xl hover:shadow-[var(--accent-soft)]/20 border-none bg-gradient-to-br from-[var(--panel)] to-[var(--bg-soft)] p-1"
       onClick={onClick}
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -4, scale: 1.01 }}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <div className="h-2 w-full" style={{ background: unit.accent }} />
-      <div className="p-5">
-        <p className="xenon-kicker" style={{ color: unit.accent }}>{unit.unit}</p>
-        <h3 className="mt-2 text-lg font-semibold leading-snug">{unit.title}</h3>
-        <p className="mt-2 text-sm text-[var(--muted)] line-clamp-2">
-          {unit.notes[0]?.body.slice(0, 90)}...
+      <div className="rounded-[22px] bg-[var(--panel)] p-6 h-full flex flex-col">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full bg-white/5" style={{ color: unit.accent }}>
+            {unit.unit}
+          </span>
+          <div className="h-8 w-8 rounded-full flex items-center justify-center bg-white/5 group-hover:bg-[var(--accent)] group-hover:text-white transition-colors">
+            <ArrowRight className="h-4 w-4" />
+          </div>
+        </div>
+        
+        <h3 className="text-xl font-black tracking-tight leading-tight mb-3 group-hover:text-[var(--accent)] transition-colors">{unit.title}</h3>
+        
+        <p className="text-xs text-[var(--muted)] font-medium line-clamp-2 leading-relaxed flex-1">
+          {unit.notes[0]?.body}
         </p>
-        <div className="mt-4 flex gap-2">
-          <span className="xenon-badge flex items-center gap-1">
+        
+        <div className="mt-6 pt-6 border-t border-[var(--border)] flex items-center gap-4">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--muted)]">
             <FileText className="h-3 w-3" />
-            {unit.notes.length} sections
-          </span>
-          <span className="xenon-badge flex items-center gap-1">
+            {unit.notes.length} SECTIONS
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--muted)]">
             <Layers className="h-3 w-3" />
-            {unit.flashcards.length} cards
-          </span>
+            {unit.flashcards.length} CARDS
+          </div>
         </div>
       </div>
     </motion.button>
@@ -828,26 +859,27 @@ function TopicSearch({ onSelect }) {
       </div>
       
       {results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 z-10 rounded-xl border border-[var(--border)] bg-[var(--panel)] shadow-lg overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-2 z-[200] rounded-xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
           {results.map((result, i) => (
             <button
               key={i}
-              className="w-full p-3 text-left hover:bg-white/[0.05] transition flex items-start gap-3 border-b border-[var(--border)] last:border-b-0"
+              className="w-full p-4 text-left hover:bg-[var(--accent-soft)] transition flex items-start gap-4 border-b border-[var(--border)] last:border-b-0"
               onClick={() => {
                 onSelect(result.unit.id);
                 setQuery("");
                 setResults([]);
               }}
             >
-              <span className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-white/10" style={{ color: result.unit.accent }}>
+              <span className="flex items-center gap-2 text-[10px] px-2 py-1 rounded-full font-black uppercase tracking-widest bg-white/10" style={{ color: result.unit.accent }}>
                 {getTypeIcon(result.type)}
+                {result.type}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{result.text}</p>
+                <p className="text-sm font-bold truncate">{result.text}</p>
                 {result.preview && (
-                  <p className="text-xs text-[var(--muted)] truncate">{result.preview}</p>
+                  <p className="text-[10px] text-[var(--muted)] font-medium truncate mt-0.5">{result.preview}</p>
                 )}
-                <p className="text-xs mt-1" style={{ color: result.unit.accent }}>{result.unit.title}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest mt-2" style={{ color: result.unit.accent }}>{result.unit.title}</p>
               </div>
             </button>
           ))}
@@ -872,64 +904,64 @@ export default function TheoryPanel() {
   const totalNotes = THEORY_UNITS.reduce((sum, u) => sum + u.notes.length, 0);
 
   return (
-    <motion.div className="space-y-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="xenon-panel p-6 sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <span className="xenon-pill flex items-center gap-2 w-fit">
-              <GraduationCap className="h-4 w-4" />
-              GCSE Computer Science Theory
-            </span>
-            <h2 className="mt-4 text-2xl font-bold sm:text-3xl">Theory & Revision</h2>
-            <p className="mt-2 max-w-2xl text-sm text-[var(--muted)] sm:text-base">
-              All 9 GCSE Computer Science units — concise notes, self-marking flashcards, and written quizzes. Select a topic to start learning.
+    <motion.div className="space-y-6 pb-20" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+      <div className="xenon-panel p-8 sm:p-12 relative z-[100]">
+        <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+          <GraduationCap className="h-64 w-64" />
+        </div>
+        
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="max-w-3xl">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="xenon-pill bg-[var(--accent-soft)] text-[var(--accent)] border-none px-4 py-1.5 flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5" />
+                OCR · AQA · EDEXCEL
+              </span>
+              <span className="xenon-pill bg-sky-500/10 text-sky-500 border-none px-4 py-1.5">GCSE Curriculum 2024</span>
+            </div>
+            <h2 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl leading-[1.1]">The Theory Hub</h2>
+            <p className="mt-4 text-lg text-[var(--muted)] font-medium leading-relaxed">
+              Master the core units of GCSE Computer Science with precision-engineered notes and interactive flashcards. Designed for final exam success.
             </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <span className="xenon-badge">AQA</span>
-            <span className="xenon-badge">OCR</span>
-            <span className="xenon-badge">Edexcel</span>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="mt-6 flex flex-wrap gap-6 text-sm">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-blue-400/20 flex items-center justify-center">
-              <BookMarked className="h-5 w-5 text-blue-400" />
-            </div>
-            <div>
-              <p className="font-bold text-lg">{THEORY_UNITS.length}</p>
-              <p className="text-xs text-[var(--muted)]">Units</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-purple-400/20 flex items-center justify-center">
-              <FileText className="h-5 w-5 text-purple-400" />
-            </div>
-            <div>
-              <p className="font-bold text-lg">{totalNotes}</p>
-              <p className="text-xs text-[var(--muted)]">Sections</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-green-400/20 flex items-center justify-center">
-              <Layers className="h-5 w-5 text-green-400" />
-            </div>
-            <div>
-              <p className="font-bold text-lg">{totalCards}</p>
-              <p className="text-xs text-[var(--muted)]">Flashcards</p>
+            
+            <div className="mt-10 flex flex-wrap gap-10">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
+                  <BookMarked className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black">{THEORY_UNITS.length}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Core Units</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500 border border-purple-500/20">
+                  <Layers className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black">{totalCards}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Flashcards</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500 border border-green-500/20">
+                  <Check className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black">100%</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">GCSE Covered</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="mt-6">
+        <div className="mt-12 relative z-10 max-w-2xl">
           <TopicSearch onSelect={setSelectedId} />
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 relative z-0">
         {THEORY_UNITS.map((unit) => (
           <TopicCard key={unit.id} unit={unit} onClick={() => setSelectedId(unit.id)} />
         ))}

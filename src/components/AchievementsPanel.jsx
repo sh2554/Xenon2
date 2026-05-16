@@ -1,17 +1,23 @@
+import { 
+  Code, School, Star, Award, Trophy, 
+  Flame, Zap, Medal, Crown 
+} from "lucide-react";
+
 export const ACHIEVEMENT_DEFS = {
-  first_project: { icon: "\u{1F4BB}", label: "First Project", desc: "Saved your first project" },
-  joined_class: { icon: "\u{1F3EB}", label: "Class Member", desc: "Joined a class" },
-  skills_5: { icon: "\u{2B50}", label: "Getting Started", desc: "5 practice questions correct" },
-  skills_25: { icon: "\u{1F31F}", label: "Practice Pro", desc: "25 practice questions correct" },
-  skills_100: { icon: "\u{1F3C6}", label: "Master Coder", desc: "100 practice questions correct" },
-  streak_3: { icon: "\u{1F525}", label: "On a Roll", desc: "3-day login streak" },
-  streak_7: { icon: "\u{26A1}", label: "Week Warrior", desc: "7-day login streak" },
-  top_3: { icon: "\u{1F396}\u{FE0F}", label: "Top 3", desc: "Reached top 3 in your class" },
-  top_1: { icon: "\u{1F451}", label: "Class Champion", desc: "Reached rank #1 in your class" },
-  rank_1: { icon: "\u{1F947}", label: "Gold Badge", desc: "Finished 1st in your class" },
-  rank_2: { icon: "\u{1F948}", label: "Silver Badge", desc: "Finished 2nd in your class" },
-  rank_3: { icon: "\u{1F949}", label: "Bronze Badge", desc: "Finished 3rd in your class" },
+  first_project: { icon: <Code className="h-5 w-5" />, label: "First Project", desc: "Saved your first project" },
+  joined_class: { icon: <School className="h-5 w-5" />, label: "Class Member", desc: "Joined a class" },
+  skills_5: { icon: <Star className="h-5 w-5 text-amber-400" />, label: "Getting Started", desc: "5 practice questions correct" },
+  skills_25: { icon: <Star className="h-5 w-5 text-sky-400" />, label: "Practice Pro", desc: "25 practice questions correct" },
+  skills_100: { icon: <Trophy className="h-5 w-5 text-amber-400" />, label: "Master Coder", desc: "100 practice questions correct" },
+  streak_3: { icon: <Flame className="h-5 w-5 text-orange-500" />, label: "On a Roll", desc: "3-day login streak" },
+  streak_7: { icon: <Zap className="h-5 w-5 text-sky-400" />, label: "Week Warrior", desc: "7-day login streak" },
+  top_3: { icon: <Award className="h-5 w-5 text-slate-400" />, label: "Top 3", desc: "Reached top 3 in your class" },
+  top_1: { icon: <Crown className="h-5 w-5 text-amber-400" />, label: "Class Champion", desc: "Reached rank #1 in your class" },
+  rank_1: { icon: <Medal className="h-5 w-5 text-amber-400" />, label: "Gold Badge", desc: "Finished 1st in your class" },
+  rank_2: { icon: <Medal className="h-5 w-5 text-slate-400" />, label: "Silver Badge", desc: "Finished 2nd in your class" },
+  rank_3: { icon: <Medal className="h-5 w-5 text-orange-400" />, label: "Bronze Badge", desc: "Finished 3rd in your class" },
 };
+
 
 export function AchievementGrid({ achievements = [], warning = "", compact = false }) {
   const earnedKeys = new Set((achievements || []).map((entry) => entry.achievement_key));

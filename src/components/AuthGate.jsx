@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import clsx from "clsx";
 import { useAppStore } from "../store/useAppStore";
 import SiteFooter from "./SiteFooter";
+import HomeLanding from "./HomeLanding";
+
 
 const roleOptions = [
   { label: "Student", value: "student" },
@@ -66,10 +68,25 @@ export default function AuthGate({ initialMode = "landing" }) {
         setMessage("Account created.");
       }
     } catch (err) {
-      setError(err?.message || "Authentication failed.");
+      console.error("Auth Error:", err);
+      // Improve error display: if it's an object (like a Supabase error), try to extract message or stringify carefully
+      let errorMsg = "Authentication failed.";
+      if (err?.message) {
+        errorMsg = err.message;
+      } else if (typeof err === "object") {
+        try {
+          // If it's a raw object that stringifies to {}, try to get internal properties
+          errorMsg = err.error_description || err.error || JSON.stringify(err);
+          if (errorMsg === "{}") errorMsg = "An unknown error occurred. Check your Supabase/SMTP settings.";
+        } catch {
+          errorMsg = "An unknown error occurred.";
+        }
+      }
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
+
   };
 
   const onGoogleClick = async () => {
@@ -90,97 +107,19 @@ export default function AuthGate({ initialMode = "landing" }) {
 
   if (mode === "landing") {
     return (
-      <div className="xenon-shell px-4 py-6 md:px-6">
-        <motion.div className="mx-auto max-w-6xl space-y-4" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
-          <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="xenon-panel overflow-hidden p-6 sm:p-8">
-              <div className="flex flex-wrap items-center gap-3">
-                <img src="/xenon-logo.svg" alt="Xenon Code logo" className="h-14 w-14 rounded-3xl shadow-lg shadow-black/20" />
-                <span className="xenon-pill">Browser-Based Python Learning</span>
-              </div>
-              <h1 className="xenon-section-title mt-6 max-w-3xl font-bold">Learn Python in a clean workspace built for students and teachers.</h1>
-              <p className="xenon-subtitle mt-4 max-w-3xl text-sm sm:text-base">
-                Xenon Code gives you a simple place to write Python, run it instantly, save your projects, join classes, practise coding skills, and track progress without dealing with installation problems.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <button className="xenon-btn" onClick={() => setMode("signup")}>Create Free Account</button>
-                <button className="xenon-btn-ghost" onClick={() => setMode("signin")}>Sign In</button>
-              </div>
-              <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                <div className="xenon-panel-muted p-4">
-                  <p className="xenon-kicker">Built For</p>
-                  <p className="mt-2 text-lg font-semibold">Students</p>
-                  <p className="mt-2 text-sm text-[var(--muted)]">Learn Python with practise tasks, saved work, and clearer feedback.</p>
-                </div>
-                <div className="xenon-panel-muted p-4">
-                  <p className="xenon-kicker">Built For</p>
-                  <p className="mt-2 text-lg font-semibold">Teachers</p>
-                  <p className="mt-2 text-sm text-[var(--muted)]">Create classes, share codes, and monitor progress in one place.</p>
-                </div>
-                <div className="xenon-panel-muted p-4">
-                  <p className="xenon-kicker">No Setup</p>
-                  <p className="mt-2 text-lg font-semibold">Just Open And Code</p>
-                  <p className="mt-2 text-sm text-[var(--muted)]">Everything runs in the browser, so lessons can start faster.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="xenon-panel p-6 sm:p-8">
-              <p className="xenon-kicker">How It Works</p>
-              <h2 className="mt-3 text-2xl font-semibold">A simple route from first login to class progress</h2>
-              <div className="mt-6 space-y-4">
-                {journeySteps.map((step, index) => (
-                  <div key={step} className="xenon-panel-muted flex gap-4 p-4">
-                    <span className="xenon-pill h-fit">0{index + 1}</span>
-                    <p className="text-sm leading-6 text-[var(--muted)]">{step}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(79,184,255,0.12),rgba(255,255,255,0.03))] p-5">
-                <p className="xenon-kicker">Why Xenon Code</p>
-                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                  Built after seeing Trinket shut down, Xenon Code is designed to keep Python learning accessible, focused, and classroom-friendly.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {featureHighlights.map((item) => (
-              <div key={item.title} className="xenon-panel p-5">
-                <p className="xenon-kicker">Feature</p>
-                <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{item.description}</p>
-              </div>
-            ))}
-          </section>
-
-          <section className="grid gap-4 lg:grid-cols-2">
-            <div className="xenon-panel p-6 sm:p-8">
-              <p className="xenon-kicker">For Students</p>
-              <h2 className="mt-3 text-2xl font-semibold">A calmer place to learn Python</h2>
-              <div className="mt-5 space-y-3 text-sm leading-6 text-[var(--muted)]">
-                <p>Write code, run it straight away, and read clearer Python hints when something goes wrong.</p>
-                <p>Practise Python skills with structured tasks that contribute to class progress.</p>
-                <p>Keep saved projects so classwork and homework are easy to revisit.</p>
-              </div>
-            </div>
-
-            <div className="xenon-panel p-6 sm:p-8">
-              <p className="xenon-kicker">For Teachers</p>
-              <h2 className="mt-3 text-2xl font-semibold">Simple class management without the clutter</h2>
-              <div className="mt-5 space-y-3 text-sm leading-6 text-[var(--muted)]">
-                <p>Create classes, share a code, and let students join in a few clicks.</p>
-                <p>See leaderboard positions based on practise questions, projects, and time spent practising.</p>
-                <p>Use the dashboard to keep the class organised and follow student activity more easily.</p>
-              </div>
-            </div>
-          </section>
-        </motion.div>
-        <SiteFooter />
+      <div className="xenon-shell">
+        <HomeLanding 
+          onSignup={() => setMode("signup")} 
+          onLogin={() => setMode("signin")} 
+        />
+        <SiteFooter 
+          onSignup={() => setMode("signup")} 
+          onLogin={() => setMode("signin")} 
+        />
       </div>
     );
   }
+
 
   return (
     <div className="xenon-shell px-4 py-6 md:px-6">

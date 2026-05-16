@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Editor from "@monaco-editor/react";
 import { getPyodideWorker, sendInputToWorker } from "../lib/pyodide";
 import { translatePythonError } from "../lib/errorTranslator";
 import { useAppStore } from "../store/useAppStore";
+import { Play, Save, FilePlus, Sparkles, Database, X, BookOpen, AlertCircle, Terminal, History, ArrowRight, FileText, Layers } from "lucide-react";
 import { GCSE_QUESTIONS } from "../lib/gcseQuestions";
 
 const buildMonacoTheme = (monaco) => {
@@ -46,25 +47,56 @@ export default function XenonIDE() {
   const terminalInputRef = useRef(null);
   const terminalEndRef = useRef(null);
 
-  const {
-    activeProject, enrolledClass, profile, theme,
-    setActiveProjectCode, consoleLines, setConsoleLines, appendConsoleLine,
-    newProject, saveProject, setActiveProjectTitle, queuePracticeTime, flushPracticeTime,
-  } = useAppStore();
+  const activeProjectId = useAppStore((s) => s.activeProject.id);
+  const activeProjectTitle = useAppStore((s) => s.activeProject.title);
+  
+  const enrolledClass = useAppStore((s) => s.enrolledClass);
+  const profile = useAppStore((s) => s.profile);
+  const theme = useAppStore((s) => s.theme);
+  const consoleLines = useAppStore((s) => s.consoleLines);
+  
+  // Actions
+  const setActiveProjectCode = useAppStore((s) => s.setActiveProjectCode);
+  const setConsoleLines = useAppStore((s) => s.setConsoleLines);
+  const appendConsoleLine = useAppStore((s) => s.appendConsoleLine);
+  const newProject = useAppStore((s) => s.newProject);
+  const saveProject = useAppStore((s) => s.saveProject);
+  const setActiveProjectTitle = useAppStore((s) => s.setActiveProjectTitle);
+  const queuePracticeTime = useAppStore((s) => s.queuePracticeTime);
+  const flushPracticeTime = useAppStore((s) => s.flushPracticeTime);
 
   const monacoTheme = useMemo(() => {
     const lightThemes = ["classic-light", "solarized", "pink", "blue"];
     return lightThemes.includes(theme) ? "xenon-light" : "xenon-dark";
   }, [theme]);
 
+  const editorOptions = useMemo(() => ({
+    automaticLayout: true,
+    minimap: { enabled: false },
+    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Source Code Pro', Menlo, Monaco, 'Courier New', monospace",
+    fontSize: 14,
+    lineHeight: 22,
+    fontLigatures: true,
+    cursorBlinking: "smooth",
+    cursorSmoothCaretAnimation: "on",
+    smoothScrolling: true,
+    scrollBeyondLastLine: false,
+    wordWrap: "on",
+    wrappingStrategy: "advanced",
+    fixedOverflowWidgets: true,
+    padding: { top: 12, bottom: 12 },
+    scrollbar: {
+      vertical: "auto",
+      horizontal: "auto",
+      verticalScrollbarSize: 10,
+      horizontalScrollbarSize: 10,
+    },
+  }), []);
+
   const handleEditorMount = (editor) => {
     editorRef.current = editor;
-    projectIdRef.current = activeProject.id;
+    projectIdRef.current = activeProjectId;
   };
-
-  useEffect(() => {
-    terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [consoleLines, isWaitingForInput]);
 
 
 
@@ -74,11 +106,15 @@ export default function XenonIDE() {
 
   useEffect(() => {
     if (!editorRef.current) return;
-    if (activeProject.id === projectIdRef.current) return;
-    projectIdRef.current = activeProject.id;
+    if (activeProjectId === projectIdRef.current) return;
+    
+    projectIdRef.current = activeProjectId;
     const current = editorRef.current.getValue();
-    if (current !== activeProject.code) editorRef.current.setValue(activeProject.code);
-  }, [activeProject.id, activeProject.code]);
+    const codeFromStore = useAppStore.getState().activeProject.code;
+    if (current !== codeFromStore) {
+      editorRef.current.setValue(codeFromStore);
+    }
+  }, [activeProjectId]);
 
   const handleTerminalKeyDown = (e) => {
     if (e.key === "Enter" && isWaitingForInput) {
@@ -136,7 +172,7 @@ export default function XenonIDE() {
       worker.addEventListener("message", handleMessage);
       await workerReadyPromise;
       setConsoleLines([{ type: "sys", text: "Running..." }]);
-      worker.postMessage({ type: "run", code: activeProject.code });
+      worker.postMessage({ type: "run", code: useAppStore.getState().activeProject.code });
     } catch (error) {
       setIsRunning(false);
       appendConsoleLine({ type: "err", text: "Worker Error: " + String(error) });
@@ -155,7 +191,8 @@ export default function XenonIDE() {
 
   const useChallenge = () => {
     const text = `# Challenge\n# ${GCSE_QUESTIONS[challengeIndex]}\n\n`;
-    setActiveProjectCode(`${text}${activeProject.code}`);
+    const currentCode = useAppStore.getState().activeProject.code;
+    setActiveProjectCode(`${text}${currentCode}`);
     setShowChallenge(false);
   };
 
@@ -186,19 +223,32 @@ export default function XenonIDE() {
             <p className="mt-2 text-sm text-[var(--muted)]">Write code on the left and see the result on the right.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="xenon-btn" onClick={runCode} disabled={isRunning}>
+            <button className="xenon-btn flex items-center gap-2 px-5" onClick={runCode} disabled={isRunning}>
+              {isRunning ? <History className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4 fill-current" />}
               {isRunning ? "Running..." : "Run Code"}
             </button>
-            <button className="xenon-btn-ghost" onClick={() => setShowVariables((v) => !v)}>Variables</button>
-            <button className="xenon-btn-ghost" onClick={onSave}>Save</button>
-            <button className="xenon-btn-ghost" onClick={newProject}>New Project</button>
-            <button className="xenon-btn-subtle" onClick={() => setShowChallenge((v) => !v)}>Challenges</button>
+            <button className="xenon-btn-ghost flex items-center gap-2" onClick={() => setShowVariables((v) => !v)}>
+              <Database className="h-4 w-4" />
+              Variables
+            </button>
+            <button className="xenon-btn-ghost flex items-center gap-2" onClick={onSave}>
+              <Save className="h-4 w-4" />
+              Save
+            </button>
+            <button className="xenon-btn-ghost flex items-center gap-2" onClick={newProject}>
+              <FilePlus className="h-4 w-4" />
+              New Project
+            </button>
+            <button className="xenon-btn-subtle flex items-center gap-2" onClick={() => setShowChallenge((v) => !v)}>
+              <Sparkles className="h-4 w-4" />
+              Challenges
+            </button>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <input
             className="xenon-input max-w-lg"
-            value={activeProject.title}
+            value={activeProjectTitle}
             onChange={(e) => setActiveProjectTitle(e.target.value)}
             placeholder="Untitled.py"
           />
@@ -235,27 +285,21 @@ export default function XenonIDE() {
       )}
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="xenon-panel h-[70vh] overflow-hidden p-3">
+        <section className="xenon-panel h-[40vh] md:h-[60vh] xl:h-[70vh] overflow-hidden">
           <Editor
+            key={activeProjectId}
             beforeMount={buildMonacoTheme}
             onMount={handleEditorMount}
             height="100%"
             defaultLanguage="python"
-            defaultValue={activeProject.code}
+            defaultValue={useAppStore.getState().activeProject.code}
             onChange={(value) => setActiveProjectCode(value || "")}
             theme={monacoTheme}
-            options={{
-              automaticLayout: true,
-              minimap: { enabled: false },
-              fontFamily: "JetBrains Mono",
-              fontSize: 14,
-              lineHeight: 24,
-              scrollBeyondLastLine: false,
-            }}
+            options={editorOptions}
           />
         </section>
 
-        <section className="xenon-panel flex h-[70vh] flex-col p-5">
+        <section className="xenon-panel flex h-[40vh] md:h-[60vh] xl:h-[70vh] flex-col p-5">
           <h3 className="text-lg font-semibold">Output</h3>
           <div
             className="xenon-terminal xenon-scroll mt-4 flex-1 overflow-auto p-4"
@@ -304,41 +348,60 @@ export default function XenonIDE() {
         </section>
       </div>
 
-      {showVariables && (
-        <motion.section className="xenon-panel p-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Variable Explorer</h3>
-            <button className="text-sm text-[var(--muted)] hover:text-white" onClick={() => setShowVariables(false)}>Close</button>
-          </div>
-          <p className="mt-1 text-sm text-[var(--muted)]">Inspect the current value and type of your variables after execution.</p>
-          <div className="mt-4 overflow-hidden rounded-lg border border-[var(--border)]">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-[var(--panel-muted)] text-[var(--muted)]">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Name</th>
-                  <th className="px-4 py-2 font-medium">Type</th>
-                  <th className="px-4 py-2 font-medium">Value</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border)]">
-                {variables.length > 0 ? (
-                  variables.map((v) => (
-                    <tr key={v.name} className="hover:bg-white/5">
-                      <td className="px-4 py-2 font-mono text-sky-300">{v.name}</td>
-                      <td className="px-4 py-2"><span className="xenon-badge text-[10px] uppercase opacity-70">{v.type}</span></td>
-                      <td className="px-4 py-2 font-mono text-[var(--muted)] truncate max-w-xs" title={v.value}>{v.value}</td>
-                    </tr>
-                  ))
-                ) : (
+      <AnimatePresence>
+        {showVariables && (
+          <motion.div 
+            initial={{ x: 400 }} 
+            animate={{ x: 0 }} 
+            exit={{ x: 400 }}
+            className="fixed top-0 right-0 bottom-0 w-80 z-[100] bg-[var(--panel)] border-l border-[var(--border)] shadow-2xl backdrop-blur-xl flex flex-col"
+          >
+            <div className="p-6 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-[var(--accent-soft)] to-transparent">
+              <div>
+                <h3 className="text-lg font-bold tracking-tight">Variables</h3>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Active Runtime</p>
+              </div>
+              <button 
+                className="h-8 w-8 rounded-full hover:bg-[var(--panel-soft)] flex items-center justify-center transition-colors" 
+                onClick={() => setShowVariables(false)}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-auto xenon-scroll">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[var(--panel-muted)] sticky top-0 z-10">
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-[var(--muted)]">Run code to populate variables.</td>
+                    <th className="px-4 py-3 font-bold text-[var(--muted)] uppercase tracking-tighter">Name</th>
+                    <th className="px-4 py-3 font-bold text-[var(--muted)] uppercase tracking-tighter">Value</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </motion.section>
-      )}
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {variables.length > 0 ? (
+                    variables.map((v) => (
+                      <tr key={v.name} className="hover:bg-white/[0.02]">
+                        <td className="px-4 py-3 font-mono text-sky-400 font-bold">{v.name}</td>
+                        <td className="px-4 py-3 font-mono text-[var(--muted)] truncate max-w-[140px]" title={v.value}>{v.value}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={2} className="px-4 py-12 text-center text-[var(--muted)] italic">Run code to see variables</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="p-6 bg-[var(--panel-soft)]">
+              <p className="text-[10px] leading-relaxed text-[var(--muted)] font-medium">
+                The Variable Explorer shows all global variables and their current values after your code finishes executing.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
