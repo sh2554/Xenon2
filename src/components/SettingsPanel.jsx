@@ -9,7 +9,7 @@ import { AchievementGrid } from "./AchievementsPanel";
 import { 
   Trophy, Star, Shield, User, Link, Trash2, Key, 
   Palette, UserCircle, Zap, X, ChevronRight, Check,
-  ExternalLink, LogOut, Bell, ShieldCheck
+  ExternalLink, LogOut, Bell, ShieldCheck, Sparkles
 } from "lucide-react";
 
 
@@ -375,6 +375,7 @@ export default function SettingsPanel() {
 
             {activeSection === "appearance" && (
               <motion.div key="appearance" {...motionProps} className="space-y-6">
+                {/* Portal Theme Selection */}
                 <div className="xenon-panel p-6 sm:p-8">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="h-12 w-12 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)]">
@@ -411,6 +412,64 @@ export default function SettingsPanel() {
                     ))}
                   </div>
                 </div>
+
+                {/* [TIER: PRO] Public Profile Theme Customization & Unlockables */}
+                {profile?.role === "student" && (
+                  <div className="xenon-panel p-6 sm:p-8">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="h-12 w-12 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)]">
+                        <Sparkles className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black tracking-tight">Public Profile & Leaderboard Theme</h3>
+                        <p className="mt-1 text-sm text-[var(--muted)] font-medium">Stand out in leaderboards with custom colors, glows, and titles.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {[
+                        { value: "default", label: "GCSE Apprentice", desc: "Default theme. Available for everyone.", minLevel: 1 },
+                        { value: "pink-glass", label: "🌸 Sakura Spark", desc: "Unlock: Reach Level 5 or Top 3 in Class.", minLevel: 5, rankReq: 3 },
+                        { value: "oled", label: "🌌 Dark Mode Overlord", desc: "Unlock: Reach Level 8.", minLevel: 8 },
+                        { value: "cyberpunk", label: "👑 Cyberpunk Wizard", desc: "Unlock: Reach Level 10 or 1st Place in Class.", minLevel: 10, rankReq: 1 },
+                      ].map((t) => {
+                        const currentLevel = profile?.level || 1;
+                        const currentRank = enrolledClass?.rank || 999;
+                        const isUnlocked = 
+                          currentLevel >= t.minLevel || 
+                          (t.rankReq && currentRank <= t.rankReq);
+
+                        const activeTheme = profile?.profile_theme || profile?.avatar_url || "default";
+
+                        return (
+                          <button
+                            key={t.value}
+                            disabled={!isUnlocked}
+                            onClick={() => useAppStore.getState().setProfileTheme(t.value)}
+                            className={clsx(
+                              "group relative flex flex-col items-start rounded-2xl border-2 p-6 transition-all text-left w-full",
+                              !isUnlocked ? "opacity-50 cursor-not-allowed border-dashed bg-black/10" :
+                              activeTheme === t.value ? "border-amber-500 bg-amber-500/5" : "border-[var(--border)] hover:border-[var(--muted)]"
+                            )}
+                          >
+                            <span className="text-sm font-black text-white">{t.label}</span>
+                            <span className="text-xs text-[var(--muted)] mt-1 font-medium">{t.desc}</span>
+                            
+                            {!isUnlocked ? (
+                              <div className="absolute top-4 right-4 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/25 px-2 py-0.5 rounded flex items-center gap-1">
+                                🔒 Locked
+                              </div>
+                            ) : activeTheme === t.value ? (
+                              <div className="absolute top-4 right-4">
+                                <Check className="h-4 w-4 text-amber-500" />
+                              </div>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 

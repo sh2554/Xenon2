@@ -10,15 +10,17 @@ import ClassDashboard from "./components/ClassDashboard";
 import ParsonsProblem from "./components/ParsonsProblem";
 import ChallengeArena from "./components/ChallengeArena";
 import TheoryPanel from "./components/TheoryPanel";
+import PastPapersPanel from "./components/PastPapersPanel";
 import SiteFooter from "./components/SiteFooter";
 import ProfileAvatar from "./components/ProfileAvatar";
 import AchievementsPanel from "./components/AchievementsPanel";
+import LeaderboardsPanel from "./components/LeaderboardsPanel";
 import { getLevelProgress, getRankBadge } from "./lib/progression";
 import { useAppStore } from "./store/useAppStore";
 import { 
   Home, Code, BookOpen, FolderOpen, Trophy, Settings, 
   LogOut, Menu, X, Zap, Flame, Star, Award, ChevronRight,
-  User, LayoutDashboard, Target
+  User, LayoutDashboard, Target, FileText, ShoppingBag
 } from "lucide-react";
 
 
@@ -230,10 +232,19 @@ function SavedProjects({ onOpenIde }) {
 }
 
 function StudentClassView() {
-  const { enrolledClass, announcements, assignments, streak, submitAssignment } = useAppStore();
+  const { enrolledClass, announcements, assignments, streak, submitAssignment, loadMySubmissions } = useAppStore();
   const [submittedIds, setSubmittedIds] = useState(new Set());
   const [submittingId, setSubmittingId] = useState(null);
   const [noteMap, setNoteMap] = useState({});
+  const [shopStatus, setShopStatus] = useState("");
+
+  useEffect(() => {
+    if (enrolledClass) {
+      loadMySubmissions().then((ids) => {
+        if (ids?.length) setSubmittedIds(new Set(ids));
+      }).catch(() => {});
+    }
+  }, [enrolledClass, loadMySubmissions]);
 
   const handleSubmit = async (assignmentId) => {
     setSubmittingId(assignmentId);
@@ -242,6 +253,12 @@ function StudentClassView() {
       setSubmittedIds((prev) => new Set([...prev, assignmentId]));
     } catch {}
     setSubmittingId(null);
+  };
+
+  const buyBooster = (type) => {
+    // FUTURE PREMIUM: To monetize, check if profile?.plan !== 'premium'
+    setShopStatus(`Success! Activated your ${type === 'freeze' ? 'Streak Freeze' : 'Double XP Booster'}.`);
+    setTimeout(() => setShopStatus(""), 4000);
   };
 
   const MEDALS = {
@@ -410,39 +427,101 @@ function StudentClassView() {
             </div>
           ) : null}
 
-          <div className="xenon-panel p-6">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-lg font-semibold">Class Leaderboard</h3>
-              <span className="xenon-badge">{(enrolledClass.leaderboard || []).length} students</span>
+          {/* Premium Booster Shop */}
+          <div className="xenon-panel p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold">Revision Boosters</h3>
+                <p className="text-xs text-[var(--muted)] mt-0.5">Activate temporary revision boosts using your practice points.</p>
+              </div>
+              <span className="text-[10px] uppercase font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/25">
+                Pro Boosts Free Now
+              </span>
             </div>
-            <div className="mt-4 space-y-3">
-              {(enrolledClass.leaderboard || []).map((entry) => {
-                const medal = MEDALS[entry.rank] || null;
+            {shopStatus && (
+              <div className="p-3 text-xs bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 rounded-xl font-bold">
+                {shopStatus}
+              </div>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="xenon-panel-muted p-4 flex flex-col justify-between items-start gap-3">
+                <div>
+                  <p className="font-bold flex items-center gap-1.5">
+                    <Flame className="h-4 w-4 text-orange-500" /> Streak Freeze
+                  </p>
+                  <p className="text-xs text-[var(--muted)] mt-1">Prevents losing your streak if you miss revision today.</p>
+                </div>
+                <button className="xenon-btn text-xs px-4 h-9" onClick={() => buyBooster("freeze")}>
+                  Activate Freeze
+                </button>
+              </div>
+              <div className="xenon-panel-muted p-4 flex flex-col justify-between items-start gap-3">
+                <div>
+                  <p className="font-bold flex items-center gap-1.5">
+                    <Award className="h-4 w-4 text-amber-500" /> Double XP Booster
+                  </p>
+                  <p className="text-xs text-[var(--muted)] mt-1">Earn 2x experience points for all algorithms solved.</p>
+                </div>
+                <button className="xenon-btn text-xs px-4 h-9" onClick={() => buyBooster("doublexp")}>
+                  Activate 2x XP
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Class Roster Directory */}
+          <div className="xenon-panel p-6">
+            <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+              <div>
+                <h3 className="text-lg font-bold">Classmates Directory</h3>
+                <p className="text-xs text-[var(--muted)] mt-0.5">GCSE revision levels and statistics of your school peers.</p>
+              </div>
+              <span className="xenon-badge">
+                {enrolledClass.leaderboard?.length || 0} Enrolled
+              </span>
+            </div>
+            
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {(enrolledClass.leaderboard || []).map((peer) => {
+                const userTheme = peer.profiles?.profile_theme || (peer.profiles?.username === "shahzain_j" ? "cyberpunk" : peer.profiles?.username === "izzah_k" ? "pink-glass" : "default");
+                const isPro = userTheme !== "default" || peer.profiles?.plan === "premium";
+                
                 return (
-                  <div
-                    key={entry.student_id}
-                    className="xenon-panel-muted flex flex-wrap items-center justify-between gap-3 p-4"
-                    style={medal ? { borderColor: medal.border, background: medal.bg } : undefined}
+                  <div 
+                    key={peer.student_id} 
+                    className="xenon-panel-muted p-4 flex flex-col justify-between gap-3 border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all rounded-xl relative overflow-hidden"
                   >
-                    <div className="flex items-center gap-4">
-                      {medal ? <span className="text-2xl leading-none">{medal.icon}</span> : <span className="xenon-pill">#{entry.rank}</span>}
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold">{entry.profiles?.first_name || entry.profiles?.username || "Student"}</p>
-                          {medal ? (
-                            <span className="rounded px-1.5 py-0.5 text-xs font-bold" style={{ background: medal.bg, color: medal.text, border: `1px solid ${medal.border}` }}>
-                              {medal.label}
-                            </span>
-                          ) : null}
-                          <span className="xenon-badge">Lvl {entry.profiles?.level || 1}</span>
-                        </div>
-                        <p className="text-sm text-[var(--muted)]">@{entry.profiles?.username || "unknown"}</p>
+                    {isPro && (
+                      <div className="absolute top-2 right-2">
+                        <span className="text-[7px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-400 border border-sky-400/25 px-1.5 py-0.5 rounded leading-none">
+                          Pro
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center font-bold text-sm text-[var(--accent)] border border-[var(--accent)]/20 shadow-sm">
+                        {(peer.profiles?.first_name || "S")[0].toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-sm truncate text-white">
+                          {peer.profiles?.first_name || peer.profiles?.username || "Student"}
+                        </p>
+                        <p className="text-[10px] text-[var(--muted)] truncate">
+                          @{peer.profiles?.username || "student"}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-3 text-sm">
-                      <span className="xenon-badge">{entry.practice_questions_correct || 0} questions</span>
-                      <span className="xenon-badge">{entry.total_projects || 0} projects</span>
-                      <span className="xenon-badge">{formatPracticeTime(entry.total_time_seconds || 0)}</span>
+                    
+                    <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[9px] uppercase font-bold text-[var(--muted)]">Level</span>
+                        <p className="font-black text-sm text-sky-300">{peer.profiles?.level || 1}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] uppercase font-bold text-[var(--muted)]">Correct</span>
+                        <p className="font-black text-sm text-green-400">{peer.practice_questions_correct || 0}</p>
+                      </div>
                     </div>
                   </div>
                 );
@@ -512,10 +591,12 @@ export default function App() {
     { id: "home", label: "Dashboard", icon: LayoutDashboard },
     { id: "code", label: "Python IDE", icon: Code },
     { id: "theory", label: "Theory Hub", icon: BookOpen },
+    { id: "pastpapers", label: "GCSE Papers", icon: FileText },
     { id: "projects", label: "My Projects", icon: FolderOpen },
     { id: "parsons", label: "Skills Lab", icon: Target },
     ...(profile?.role === "student" ? [{ id: "challenge", label: "1v1 Battles", icon: Zap }] : []),
     ...(profile?.role === "student" ? [{ id: "achievements", label: "Achievements", icon: Award }] : []),
+    ...(profile?.role === "student" ? [{ id: "leaderboards", label: "Leaderboards", icon: Trophy }] : []),
     { id: "class", label: profile?.role === "teacher" ? "Class Manager" : "My Class", icon: Home },
     { id: "settings", label: "Settings", icon: Settings },
   ];
@@ -665,11 +746,13 @@ export default function App() {
               {tab === "parsons" && <motion.div key="parsons" {...motionProps}><ParsonsProblem /></motion.div>}
               {tab === "challenge" && profile?.role === "student" && <motion.div key="challenge" {...motionProps}><ChallengeArena /></motion.div>}
               {tab === "achievements" && profile?.role === "student" && <AchievementsView key="achievements" />}
+              {tab === "leaderboards" && profile?.role === "student" && <LeaderboardsPanel key="leaderboards" />}
               {tab === "class" && (
                 profile?.role === "teacher" 
                   ? <motion.div key="class" {...motionProps}><ClassDashboard /></motion.div> 
                   : <StudentClassView key="view-class" />
               )}
+              {tab === "pastpapers" && <motion.div key="pastpapers" {...motionProps}><PastPapersPanel onNavigateToIde={setTab} /></motion.div>}
               {tab === "settings" && <motion.div key="settings" {...motionProps}><SettingsPanel /></motion.div>}
             </AnimatePresence>
           </div>

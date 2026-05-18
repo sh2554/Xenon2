@@ -54,6 +54,8 @@ export function translatePythonError(rawError) {
     .replace(/^PythonError:\s*/i, "")
     .trim();
   const match = Object.keys(GCSE_ERROR_MAP).find((type) => cleaned.includes(type));
-  if (!match) return cleaned;
-  return `${cleaned}\n\n${GCSE_ERROR_MAP[match]}`;
+  if (!match) {
+    return "💡 Xenon Hint: Check your spelling, matching brackets, and indentation. Ensure you have defined all variables before calling them.";
+  }
+  return `💡 Xenon ${match} Hint: ${GCSE_ERROR_MAP[match].replace(/^Hint:\s*/i, "")}`;
 }

@@ -6,7 +6,7 @@ import { getChallengeXpBreakdown, getLevelFromXp } from "../lib/progression";
 import { isMissingSupabaseTableError, translateSupabaseError } from "../lib/errorTranslator";
 
 const THEMES = ["xenon-dark", "oled-black", "classic-light", "solarized", "pink", "blue"];
-const PROFILE_SELECT_FIELDS = "id, full_name, first_name, username, role, has_seen_init, joined_app, created_at, avatar_url, headline, about_me, favorite_topic, profile_visibility, experience_points, level";
+const PROFILE_SELECT_FIELDS = "id, full_name, first_name, username, role, has_seen_init, joined_app, created_at, avatar_url, headline, about_me, favorite_topic, profile_visibility, experience_points, level, questions_solved";
 const FRIEND_PROFILE_FIELDS = "id, full_name, first_name, username, role, avatar_url, headline, about_me, favorite_topic, profile_visibility, joined_app, experience_points, level";
 const FRIENDSHIP_SELECT = `id, status, created_at, responded_at, requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(${FRIEND_PROFILE_FIELDS}), addressee:profiles!friendships_addressee_id_fkey(${FRIEND_PROFILE_FIELDS})`;
 const FRIENDSHIP_SELECT_FALLBACK = "id, status, created_at, responded_at, requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(id, full_name, first_name, username, role, joined_app), addressee:profiles!friendships_addressee_id_fkey(id, full_name, first_name, username, role, joined_app)";
@@ -42,12 +42,14 @@ const normalizeProfileRecord = (profile = {}, fallback = {}) => ({
   joined_app: profile.joined_app || fallback.joined_app || new Date().toISOString(),
   created_at: profile.created_at || fallback.created_at || new Date().toISOString(),
   avatar_url: profile.avatar_url || "",
+  profile_theme: profile.avatar_url || (typeof window !== "undefined" ? window.localStorage.getItem("xenon-pro-theme") : "default") || "default",
   headline: profile.headline || "",
   about_me: profile.about_me || "",
   favorite_topic: profile.favorite_topic || "",
   profile_visibility: profile.profile_visibility ?? true,
   experience_points: Math.max(0, Number(profile.experience_points ?? fallback.experience_points ?? 0) || 0),
   level: Math.max(1, Number(profile.level ?? fallback.level ?? 1) || 1),
+  questions_solved: Math.max(0, Number(profile.questions_solved ?? fallback.questions_solved ?? 0) || 0),
 });
 
 const sanitizeUsername = (value = "") => value.trim().replace(/[^a-zA-Z0-9_]/g, "");
@@ -1268,41 +1270,26 @@ export const useAppStore = create((set, get) => ({
     if (!skillKey || !user || !enrolledClass?.id || profile?.role !== "student") return { status: "ignored" };
     if (completedPracticeSkills[skillKey]) return { status: "already_counted" };
 
+    // ── Step 1: Read current count from class_members ──────────────────────────
     const { data: member, error: memberError } = await supabase
       .from("class_members")
       .select("practice_questions_correct")
       .eq("class_id", enrolledClass.id)
       .eq("student_id", user.id)
       .single();
-    if (memberError && hasMissingColumnError(memberError)) {
-      const nextCorrect = setLocalPracticeCorrect(
-        enrolledClass.id,
-        user.id,
-        getLocalPracticeCorrect(enrolledClass.id, user.id) + 1,
-      );
-      set((state) => {
-        const nextCompletedPracticeSkills = {
-          ...state.completedPracticeSkills,
-          [skillKey]: true,
-        };
-        const nextMembers = (state.enrolledClass?.class_members || []).map((entry) =>
-          entry.student_id === user.id
-            ? {
-                ...entry,
-                practice_questions_correct: nextCorrect,
-              }
-            : entry,
-        );
-        const rankedClass = hydrateClassLeaderboard(
-          {
-            ...state.enrolledClass,
-            class_members: nextMembers,
-          },
-          user.id,
-        );
 
+    // ── Helper: update local Zustand state after a successful count ────────────
+    const applyLocalStateUpdate = (nextCorrect) => {
+      set((state) => {
+        if (!state.enrolledClass?.id) {
+          return { completedPracticeSkills: { ...state.completedPracticeSkills, [skillKey]: true } };
+        }
+        const nextMembers = (state.enrolledClass.class_members || []).map((entry) =>
+          entry.student_id === user.id ? { ...entry, practice_questions_correct: nextCorrect } : entry,
+        );
+        const rankedClass = hydrateClassLeaderboard({ ...state.enrolledClass, class_members: nextMembers }, user.id);
         return {
-          completedPracticeSkills: nextCompletedPracticeSkills,
+          completedPracticeSkills: { ...state.completedPracticeSkills, [skillKey]: true },
           enrolledClass: {
             ...rankedClass,
             total_time_seconds: state.enrolledClass.total_time_seconds,
@@ -1311,89 +1298,69 @@ export const useAppStore = create((set, get) => ({
           },
         };
       });
+    };
+
+    // ── Helper: write questions_solved + XP to profiles (global leaderboard source) ──
+    const syncProfileStats = async (nextCorrect) => {
+      const XP_PER_QUESTION = 50;
+      const currentXp = get().profile?.experience_points || 0;
+      const nextXp = currentXp + XP_PER_QUESTION;
+      const nextLevel = getLevelFromXp(nextXp);
+      // Try to update both questions_solved and XP on profile in one call
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ questions_solved: nextCorrect, experience_points: nextXp, level: nextLevel })
+        .eq("id", user.id);
+      if (profileError) {
+        // questions_solved column may not exist yet — fall back to just XP
+        await supabase
+          .from("profiles")
+          .update({ experience_points: nextXp, level: nextLevel })
+          .eq("id", user.id)
+          .catch(() => {});
+      }
+      // Update local profile state with new XP and questions_solved
+      set((state) => ({
+        profile: state.profile
+          ? { ...state.profile, experience_points: nextXp, level: nextLevel, questions_solved: nextCorrect }
+          : state.profile,
+      }));
+    };
+
+    // ── Case A: class_members column missing ──────────────────────────────────
+    if (memberError && hasMissingColumnError(memberError)) {
+      const nextCorrect = setLocalPracticeCorrect(
+        enrolledClass.id,
+        user.id,
+        getLocalPracticeCorrect(enrolledClass.id, user.id) + 1,
+      );
+      applyLocalStateUpdate(nextCorrect);
+      await syncProfileStats(nextCorrect).catch(() => {});
+      get().checkAndGrantAchievements().catch(() => {});
       return { status: "counted_local", totalCorrect: nextCorrect };
     }
     if (memberError) throw memberError;
 
+    // ── Case B: Update class_members DB row ───────────────────────────────────
     const nextCorrect = (member?.practice_questions_correct || 0) + 1;
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from("class_members")
       .update({ practice_questions_correct: nextCorrect })
       .eq("class_id", enrolledClass.id)
       .eq("student_id", user.id);
-    if (error && hasMissingColumnError(error)) {
-      const localCorrect = setLocalPracticeCorrect(enrolledClass.id, user.id, nextCorrect);
-      set((state) => {
-        const nextCompletedPracticeSkills = {
-          ...state.completedPracticeSkills,
-          [skillKey]: true,
-        };
-        const nextMembers = (state.enrolledClass?.class_members || []).map((entry) =>
-          entry.student_id === user.id
-            ? {
-                ...entry,
-                practice_questions_correct: localCorrect,
-              }
-            : entry,
-        );
-        const rankedClass = hydrateClassLeaderboard(
-          {
-            ...state.enrolledClass,
-            class_members: nextMembers,
-          },
-          user.id,
-        );
 
-        return {
-          completedPracticeSkills: nextCompletedPracticeSkills,
-          enrolledClass: {
-            ...rankedClass,
-            total_time_seconds: state.enrolledClass.total_time_seconds,
-            total_projects: state.enrolledClass.total_projects,
-            practice_questions_correct: localCorrect,
-          },
-        };
-      });
+    if (updateError && hasMissingColumnError(updateError)) {
+      const localCorrect = setLocalPracticeCorrect(enrolledClass.id, user.id, nextCorrect);
+      applyLocalStateUpdate(localCorrect);
+      await syncProfileStats(localCorrect).catch(() => {});
+      get().checkAndGrantAchievements().catch(() => {});
       return { status: "counted_local", totalCorrect: localCorrect };
     }
-    if (error) throw error;
+    if (updateError) throw updateError;
 
-    set((state) => {
-      const nextCompletedPracticeSkills = {
-        ...state.completedPracticeSkills,
-        [skillKey]: true,
-      };
-
-      if (!state.enrolledClass?.id) {
-        return { completedPracticeSkills: nextCompletedPracticeSkills };
-      }
-
-      const nextMembers = (state.enrolledClass.class_members || []).map((entry) =>
-        entry.student_id === user.id
-          ? {
-              ...entry,
-              practice_questions_correct: nextCorrect,
-            }
-          : entry,
-      );
-      const rankedClass = hydrateClassLeaderboard(
-        {
-          ...state.enrolledClass,
-          class_members: nextMembers,
-        },
-        user.id,
-      );
-
-      return {
-        completedPracticeSkills: nextCompletedPracticeSkills,
-        enrolledClass: {
-          ...rankedClass,
-          total_time_seconds: state.enrolledClass.total_time_seconds,
-          total_projects: state.enrolledClass.total_projects,
-          practice_questions_correct: nextCorrect,
-        },
-      };
-    });
+    // ── Case C: Success — update local state, profile XP + questions_solved ───
+    applyLocalStateUpdate(nextCorrect);
+    await syncProfileStats(nextCorrect).catch(() => {});
     await get().loadStudentClass({ sessionUser: user, profile });
     get().checkAndGrantAchievements().catch(() => {});
     return { status: "counted", totalCorrect: nextCorrect };
@@ -1612,10 +1579,114 @@ export const useAppStore = create((set, get) => ({
     if (error) throw new Error(translateSupabaseError(error, "Could not submit assignment."));
   },
 
+  loadMySubmissions: async () => {
+    const { user, enrolledClass } = get();
+    if (!user || !enrolledClass) return [];
+    const { data, error } = await supabase.from('assignment_submissions').select('assignment_id').eq('student_id', user.id).eq('class_id', enrolledClass.id);
+    if (error) return [];
+    return data.map(s => s.assignment_id);
+  },
+
   loadSubmissions: async (assignmentId) => {
     const { data, error } = await supabase.from('assignment_submissions').select('*, profiles(username, first_name)').eq('assignment_id', assignmentId);
     if (error) throw new Error(translateSupabaseError(error, "Could not load submissions."));
     return data || [];
+  },
+
+  setProfileTheme: async (themeId) => {
+    const { user } = get();
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("xenon-pro-theme", themeId);
+    }
+    set((state) => ({
+      profile: state.profile ? { ...state.profile, profile_theme: themeId } : null
+    }));
+    if (user) {
+      try {
+        await supabase.from("profiles").update({ avatar_url: themeId }).eq("id", user.id);
+      } catch {}
+    }
+  },
+
+  // [TIER: FREE]
+  // NOTE: practice_questions_correct is read from profiles.questions_solved (written by markPracticeSkillCorrect)
+  // because class_members rows are RLS-restricted to the owner, so cross-user reads return empty.
+  // XP and questions_solved on profiles are publicly readable.
+  loadGlobalLeaderboard: async () => {
+    try {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, first_name, level, experience_points, avatar_url, role, questions_solved')
+        .eq('role', 'student')
+        .order('experience_points', { ascending: false })
+        .limit(100);
+
+      if (profilesError) {
+        // questions_solved column might not exist yet — retry without it
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('profiles')
+          .select('id, username, first_name, level, experience_points, avatar_url, role')
+          .eq('role', 'student')
+          .order('experience_points', { ascending: false })
+          .limit(100);
+        if (fallbackError) {
+          console.error("Global leaderboard query error:", fallbackError);
+          return [];
+        }
+        return (fallbackData || []).map(p => ({
+          id: p.id,
+          username: p.username || "user",
+          first_name: p.first_name || p.username || "Student",
+          level: p.level || 1,
+          experience_points: p.experience_points || 0,
+          plan: (p.experience_points || 0) > 2500 ? "premium" : "free",
+          profile_theme: p.avatar_url || "default",
+          total_time_seconds: 0,
+          total_projects: 0,
+          practice_questions_correct: 0,
+        }));
+      }
+
+      if (!profilesData || profilesData.length === 0) return [];
+
+      const studentIds = profilesData.map(p => p.id);
+
+      // Try to get time + projects from class_members (may be restricted by RLS — non-fatal)
+      const { data: statsData } = await supabase
+        .from('class_members')
+        .select('student_id, total_time_seconds, total_projects')
+        .in('student_id', studentIds);
+
+      // Group class_members stats by student (time + projects only, not questions_correct due to RLS)
+      const statsMap = {};
+      (statsData || []).forEach(stat => {
+        if (!statsMap[stat.student_id]) {
+          statsMap[stat.student_id] = { total_time_seconds: 0, total_projects: 0 };
+        }
+        statsMap[stat.student_id].total_time_seconds += stat.total_time_seconds || 0;
+        statsMap[stat.student_id].total_projects += stat.total_projects || 0;
+      });
+
+      return profilesData.map(p => {
+        const stats = statsMap[p.id] || { total_time_seconds: 0, total_projects: 0 };
+        return {
+          id: p.id,
+          username: p.username || "user",
+          first_name: p.first_name || p.username || "Student",
+          level: p.level || 1,
+          experience_points: p.experience_points || 0,
+          plan: (p.experience_points || 0) > 2500 ? "premium" : "free",
+          profile_theme: p.avatar_url || "default",
+          total_time_seconds: stats.total_time_seconds,
+          total_projects: stats.total_projects,
+          // Read directly from profiles.questions_solved — written by markPracticeSkillCorrect
+          practice_questions_correct: p.questions_solved || 0,
+        };
+      });
+    } catch (e) {
+      console.error("loadGlobalLeaderboard crash:", e);
+      return [];
+    }
   },
 
 }));
