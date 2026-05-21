@@ -572,7 +572,7 @@ export default function PastPapersPanel({ onNavigateToIde }) {
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Note on Premium Upgrades</p>
               <p className="text-xs text-[var(--muted)] mt-0.5">
-                Free includes one OCR theory paper. Redeem code <strong>PRO123</strong> in Account Settings to unlock 2023 OCR papers, AQA specimen papers, and all programming papers.
+                Free includes one OCR theory paper. Upgrade to Pro in Account Settings to unlock 2023 OCR papers, AQA specimen papers, and all programming papers.
               </p>
             </div>
           </div>

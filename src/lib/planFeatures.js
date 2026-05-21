@@ -122,7 +122,7 @@ export const PRICING_PLANS = [
     features: PRO_EXCLUSIVE_FEATURES,
     exclusiveLabel: "Pro adds",
     alsoIncludes: "Everything in Free",
-    cta: "Redeem PRO123",
+    cta: "Get Pro access",
     popular: true,
     color: "var(--accent)",
     redeemCode: "PRO123",
@@ -135,7 +135,7 @@ export const PRICING_PLANS = [
     features: MAX_EXCLUSIVE_FEATURES,
     exclusiveLabel: "Max adds (teachers)",
     alsoIncludes: "Everything in Pro + Free",
-    cta: "Redeem MAX456",
+    cta: "Get Max access",
     popular: false,
     color: "#a78bfa",
     redeemCode: "MAX456",
@@ -200,7 +200,7 @@ export function getUpgradeHint(featureKey) {
   const allowed = FEATURES[featureKey];
   if (!allowed) return null;
   if (allowed.includes("max") && !allowed.includes("pro")) {
-    return { tier: "max", code: "MAX456", label: "School Max" };
+    return { tier: "max", label: "School Max" };
   }
-  return { tier: "pro", code: "PRO123", label: "Pro" };
+  return { tier: "pro", label: "Pro" };
 }

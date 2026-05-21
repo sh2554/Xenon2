@@ -62,8 +62,8 @@ export default function MockTestPanel() {
         <h3 className="text-xl font-black">GCSE Mock Tests</h3>
         <p className="text-sm text-[var(--muted)] max-w-md mx-auto">
           Twelve full mocks (6 theory, 6 programming) with 10 questions each, plus your personal spec
-          heatmap, are included on the <strong>School Max</strong> plan. Redeem <strong>MAX456</strong> in
-          Settings.
+          heatmap, are included on the <strong>School Max</strong> plan. Upgrade in Settings with your access
+          code.
         </p>
         <button type="button" className="xenon-btn" onClick={() => setShowUpgradePrompt(true)}>
           View Max features

@@ -335,7 +335,7 @@ export const useAppStore = create((set, get) => ({
   const { profile, projects } = get();
   const limit = getProjectLimit(profile?.plan);
   if (limit != null && (projects?.length ?? 0) >= limit) {
-    throw new Error(`Free plan allows up to ${limit} saved projects. Redeem a Pro or Max code in Account Settings to unlock unlimited projects.`);
+    throw new Error(`Free plan allows up to ${limit} saved projects. Upgrade to Pro or Max in Account Settings for unlimited projects.`);
   }
   set({ activeProjectId: null, activeProject: { title: "Untitled.py", code: "" }, consoleLines: [] });
 },
@@ -1062,7 +1062,7 @@ export const useAppStore = create((set, get) => ({
     const isNewProject = !activeProjectId;
     const limit = getProjectLimit(profile?.plan);
     if (isNewProject && limit != null && (projects?.length ?? 0) >= limit) {
-      throw new Error(`Free plan allows up to ${limit} saved projects. Redeem a Pro or Max code in Account Settings.`);
+      throw new Error(`Free plan allows up to ${limit} saved projects. Upgrade to Pro or Max in Account Settings.`);
     }
     const safeTitle = (activeProject.title || "").trim() || `Untitled-${new Date().toLocaleString()}`;
     const payload = {
@@ -1453,7 +1453,7 @@ export const useAppStore = create((set, get) => ({
 
   redeemPlanCode: async (code) => {
     const newPlan = REDEEM_CODES[code.trim().toUpperCase()];
-    if (!newPlan) throw new Error("Invalid redemption code.");
+    if (!newPlan) throw new Error("Invalid access code.");
     const { user } = get();
     if (!user) throw new Error("Not authenticated.");
 
@@ -1549,7 +1549,7 @@ export const useAppStore = create((set, get) => ({
       throw new Error("Students only.");
     }
     if (!checkFeature(profile?.plan, "mockTests")) {
-      throw new Error("Mock tests require the Max plan (redeem MAX456 in Settings).");
+      throw new Error("Mock tests require the Max plan. Upgrade in Settings with your access code.");
     }
     const test = getMockTestById(testId);
     if (!test) throw new Error("Mock test not found.");

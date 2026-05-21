@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
-import { PLANS, REDEEM_CODES } from "../lib/planFeatures";
+import { PLANS } from "../lib/planFeatures";
 import PlanComparisonCards from "./PlanComparisonCards";
 
 export default function UpgradeModal({ onClose }) {
@@ -42,17 +42,15 @@ export default function UpgradeModal({ onClose }) {
           <h2 className="text-2xl font-black mb-1 text-[var(--accent)]">Choose your plan</h2>
           <p className="mb-6 text-sm text-[var(--muted)]">
             Current plan: <strong className="uppercase text-[var(--fg)]">{PLANS[current]?.label || current}</strong>.
-            Pro is for students; Max is for teachers and schools. Codes:{" "}
-            <code className="text-xs">PRO123</code>, <code className="text-xs">MAX456</code>,{" "}
-            <code className="text-xs">FREE</code> (downgrade).
+            Pro is for students; Max is for teachers and schools. Enter your access code below to upgrade.
           </p>
 
           <PlanComparisonCards currentPlan={current} />
 
           <div className="mt-8 pt-6 border-t border-[var(--border)]">
             <input
-              className="xenon-input w-full mb-3"
-              placeholder="Enter redemption code"
+              className="subscription-code-input w-full mb-3 h-11 px-3 rounded-xl text-sm font-medium"
+              placeholder="Enter access code"
               value={code}
               onChange={(e) => setCode(e.target.value)}
             />
@@ -60,9 +58,6 @@ export default function UpgradeModal({ onClose }) {
               Redeem code
             </button>
             {message && <p className="text-sm text-[var(--accent)] mt-2">{message}</p>}
-            <p className="text-[10px] text-[var(--muted)] mt-4 text-center">
-              Valid codes: {Object.keys(REDEEM_CODES).join(", ")}
-            </p>
           </div>
         </motion.div>
       </div>

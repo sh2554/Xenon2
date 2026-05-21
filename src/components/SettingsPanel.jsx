@@ -7,13 +7,14 @@ import { useAppStore } from "../store/useAppStore";
 import UpgradeModal from "./UpgradeModal";
 import { PLANS } from "../lib/planFeatures";
 import PlanComparisonCards from "./PlanComparisonCards";
+import SubscriptionPlanCard from "./SubscriptionPlanCard";
 import ProfileThemePicker from "./ProfileThemePicker";
 import ProfileAvatar from "./ProfileAvatar";
 import { AchievementGrid } from "./AchievementsPanel";
 import { 
   Trophy, Star, Shield, User, Link, Trash2, Key, 
   Palette, UserCircle, Zap, X, ChevronRight, Check,
-  ExternalLink, LogOut, Bell, ShieldCheck, Sparkles
+  ExternalLink, LogOut, Bell, Sparkles
 } from "lucide-react";
 
 
@@ -74,48 +75,22 @@ function SettingsSidebar({
         ))}
       </div>
       
-      <div className="xenon-panel p-6 bg-gradient-to-br from-[var(--accent-soft)] to-transparent border-none">
-        <div className="flex items-center gap-3 text-[var(--accent)] mb-3">
-          <ShieldCheck className="h-5 w-5" />
-          <span className="text-xs font-black uppercase tracking-widest">Subscription Plan</span>
-        </div>
-        <p className="text-xs font-medium text-[var(--muted)] leading-relaxed">
-          Current plan: <strong className="uppercase">{PLANS[currentPlan]?.label || currentPlan}</strong>
-        </p>
-        <p className="text-[10px] text-[var(--muted)] mt-1">{PLANS[currentPlan]?.tagline}</p>
-        <p className="text-[10px] text-[var(--muted)] mt-2 leading-relaxed">
-          <strong className="text-amber-300">Pro</strong> = student revision.{" "}
-          <strong className="text-violet-300">Max</strong> = teacher tools (includes Pro).
-        </p>
-        <div className="mt-2 flex gap-2">
-          <input
-            type="text"
-            placeholder="PRO123, MAX456, or FREE"
-            className="flex-1 px-2 py-1 border rounded"
-            value={redeemCode}
-            onChange={(e) => setRedeemCode(e.target.value)}
-          />
-          <button
-            className="xenon-btn-subtle h-10 text-xs font-black"
-            onClick={async () => {
-              try {
-                await redeemPlanCode(redeemCode);
-                setRedeemMessage("Plan upgraded!");
-                setRedeemCode("");
-              } catch (err) {
-                setRedeemMessage(err.message || "Failed to redeem.");
-              }
-            }}
-          >Redeem</button>
-        </div>
-        {redeemMessage && <p className="mt-1 text-xs text-[var(--accent)]">{redeemMessage}</p>}
-        <button
-            className="mt-4 w-full xenon-btn-subtle h-10 text-xs font-black bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white transition-all"
-            onClick={onUpgradeClick}
-          >
-            Compare plans & upgrade
-          </button>
-      </div>
+      <SubscriptionPlanCard
+        currentPlan={currentPlan}
+        redeemCode={redeemCode}
+        setRedeemCode={setRedeemCode}
+        redeemMessage={redeemMessage}
+        onRedeem={async () => {
+          try {
+            await redeemPlanCode(redeemCode);
+            setRedeemMessage("Plan upgraded!");
+            setRedeemCode("");
+          } catch (err) {
+            setRedeemMessage(err.message || "Failed to redeem.");
+          }
+        }}
+        onUpgradeClick={onUpgradeClick}
+      />
     </div>
   );
 }
@@ -658,36 +633,30 @@ export default function SettingsPanel() {
 
             {activeSection === "account" && (
               <motion.div key="account" {...motionProps} className="space-y-6">
+                <div className="max-w-md">
+                  <SubscriptionPlanCard
+                    currentPlan={currentPlan}
+                    redeemCode={redeemCode}
+                    setRedeemCode={setRedeemCode}
+                    redeemMessage={redeemMessage}
+                    onRedeem={async () => {
+                      try {
+                        await redeemPlanCode(redeemCode);
+                        setRedeemMessage("Plan upgraded!");
+                        setRedeemCode("");
+                      } catch (err) {
+                        setRedeemMessage(err.message || "Invalid access code.");
+                      }
+                    }}
+                    onUpgradeClick={() => setShowUpgradePrompt(true)}
+                  />
+                </div>
                 <div className="xenon-panel p-6 sm:p-8">
-                  <h3 className="text-xl font-black tracking-tight">Subscription & redemption</h3>
+                  <h3 className="text-xl font-black tracking-tight">Plan comparison</h3>
                   <p className="mt-1 text-sm text-[var(--muted)] font-medium mb-6">
-                    Upgrade with a code until Stripe billing is enabled. Current plan: <strong className="uppercase">{currentPlan}</strong>.
+                    See what is included on each tier.
                   </p>
                   <PlanComparisonCards currentPlan={currentPlan} compact />
-                  <div className="flex flex-wrap gap-2 max-w-md">
-                    <input
-                      className="xenon-input flex-1 min-w-[140px]"
-                      placeholder="PRO123, MAX456, or FREE"
-                      value={redeemCode}
-                      onChange={(e) => setRedeemCode(e.target.value)}
-                    />
-                    <button
-                      className="xenon-btn"
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          await redeemPlanCode(redeemCode);
-                          setRedeemMessage("Plan upgraded!");
-                          setRedeemCode("");
-                        } catch (err) {
-                          setRedeemMessage(err.message || "Invalid code.");
-                        }
-                      }}
-                    >
-                      Redeem
-                    </button>
-                  </div>
-                  {redeemMessage && <p className="text-xs text-[var(--accent)] mt-2">{redeemMessage}</p>}
                 </div>
 
                 <div className="xenon-panel p-6 sm:p-8">

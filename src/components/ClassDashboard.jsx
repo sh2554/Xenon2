@@ -448,7 +448,7 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
               </button>
               {exportError && <p className="w-full text-xs text-red-400 mt-2">{exportError}</p>}
               {!hasFeature("rosterProgressExport") && (
-                <p className="w-full text-[10px] text-[var(--muted)] mt-2">Requires Max plan — redeem <strong>MAX456</strong> in Settings.</p>
+                <p className="w-full text-[10px] text-[var(--muted)] mt-2">Requires Max plan — upgrade in Settings.</p>
               )}
             </div>
 
@@ -467,7 +467,7 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
                 <div className="py-10 text-center border border-dashed border-violet-400/30 rounded-2xl">
                   <p className="text-sm font-bold text-violet-300">Max plan required</p>
                   <p className="text-xs text-[var(--muted)] mt-2 max-w-md mx-auto">
-                    Redeem <strong>MAX456</strong> in Settings to unlock per-student heatmaps and class analytics.
+                    Upgrade to Max in Settings to unlock per-student heatmaps and class analytics.
                   </p>
                   <button type="button" className="xenon-btn mt-4 text-xs" onClick={() => setShowUpgradePrompt(true)}>
                     View Max features

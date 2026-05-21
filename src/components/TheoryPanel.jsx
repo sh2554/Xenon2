@@ -657,7 +657,7 @@ function TopicDetail({ unit, onBack }) {
                       )}
                       {section.proDetail && !canViewProNotes && (
                         <p className="mt-4 text-xs text-[var(--muted)]">
-                          Redeem <strong>PRO123</strong> in Account Settings for extended examiner notes on this topic.
+                          Upgrade to Pro in Account Settings for extended examiner notes on this topic.
                         </p>
                       )}
                     </div>

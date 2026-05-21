@@ -58,9 +58,6 @@ export default function PlanComparisonCards({ currentPlan = "free", compact = fa
               {t.headerNote && (
                 <p className="text-[10px] text-[var(--muted)] mt-1 font-medium">{t.headerNote}</p>
               )}
-              {t.plan.redeemCode && (
-                <p className="text-[10px] font-mono text-[var(--accent)] mt-1">Code: {t.plan.redeemCode}</p>
-              )}
               {isCurrent && (
                 <span className="inline-block mt-2 text-[9px] font-black uppercase bg-[var(--accent)] text-white px-2 py-0.5 rounded">
                   Your plan

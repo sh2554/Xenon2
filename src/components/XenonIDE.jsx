@@ -734,7 +734,7 @@ export default function XenonIDE() {
               </span>
               ) : (
               <span className="text-[9px] font-black uppercase bg-amber-500/10 text-amber-300 border border-amber-400/25 px-1.5 py-0.5 rounded leading-none">
-                Redeem PRO123 to unlock
+                Upgrade to Pro in Settings to unlock
               </span>
               )}
               <p className="text-[10px] leading-relaxed text-[var(--muted)] font-medium mt-2">
