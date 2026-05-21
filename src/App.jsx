@@ -7,11 +7,19 @@ import ProfileSetupModal from "./components/ProfileSetupModal";
 import XenonIDE from "./components/XenonIDE";
 import SettingsPanel from "./components/SettingsPanel";
 import ClassDashboard from "./components/ClassDashboard";
+import StudentAssignmentWork from "./components/StudentAssignmentWork";
+import StreakBoosters, { StreakBadge } from "./components/StreakBoosters";
+import MockTestPanel from "./components/MockTestPanel";
+import { hasFeature } from "./lib/planFeatures";
+import { parseAssignment } from "./lib/assignmentPayload";
 import ParsonsProblem from "./components/ParsonsProblem";
 import ChallengeArena from "./components/ChallengeArena";
 import TheoryPanel from "./components/TheoryPanel";
 import PastPapersPanel from "./components/PastPapersPanel";
 import SiteFooter from "./components/SiteFooter";
+import UpgradeModal from "./components/UpgradeModal";
+import PlanBadge from "./components/PlanBadge";
+import { getProjectLimit, isProOrMax, normalizePlan } from "./lib/planFeatures";
 import ProfileAvatar from "./components/ProfileAvatar";
 import AchievementsPanel from "./components/AchievementsPanel";
 import LeaderboardsPanel from "./components/LeaderboardsPanel";
@@ -19,7 +27,7 @@ import { getLevelProgress, getRankBadge } from "./lib/progression";
 import { useAppStore } from "./store/useAppStore";
 import { 
   Home, Code, BookOpen, FolderOpen, Trophy, Settings, 
-  LogOut, Menu, X, Zap, Flame, Star, Award, ChevronRight,
+  LogOut, Menu, X, Zap, Flame, Star, Award, ChevronRight, ClipboardCheck,
   User, LayoutDashboard, Target, FileText, ShoppingBag
 } from "lucide-react";
 
@@ -167,7 +175,8 @@ function HomeView({ profile, enrolledClass, projectsCount, challengeCount, onNav
 
 
 function SavedProjects({ onOpenIde }) {
-  const { projects, openProject, loadProjects, newProject } = useAppStore();
+  const { projects, openProject, loadProjects, newProject, profile, setShowUpgradePrompt } = useAppStore();
+  const limit = getProjectLimit(profile?.plan);
 
   useEffect(() => {
     loadProjects();
@@ -178,14 +187,30 @@ function SavedProjects({ onOpenIde }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold">Saved Projects</h2>
-          <p className="mt-2 text-sm text-[var(--muted)]">Open an old project or start a new one.</p>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            Open an old project or start a new one.
+            {limit != null && (
+              <span className="block mt-1 text-xs">
+                {projects.length} / {limit} projects (Free).{" "}
+                <button type="button" className="text-[var(--accent)] font-bold hover:underline" onClick={() => setShowUpgradePrompt(true)}>
+                  Upgrade for unlimited
+                </button>
+              </span>
+            )}
+          </p>
         </div>
         <button
           className="xenon-btn"
           onClick={() => {
-            newProject();
-            onOpenIde();
+            try {
+              newProject();
+              onOpenIde();
+            } catch (e) {
+              alert(e?.message || "Could not create project.");
+              setShowUpgradePrompt(true);
+            }
           }}
+          disabled={limit != null && projects.length >= limit}
         >
           New Project
         </button>
@@ -231,13 +256,21 @@ function SavedProjects({ onOpenIde }) {
   );
 }
 
-function StudentClassView() {
-  const { enrolledClass, announcements, assignments, streak, submitAssignment, loadMySubmissions } = useAppStore();
+function StudentClassView({ onNavigateToIde }) {
+  const {
+    enrolledClass,
+    announcements,
+    assignments,
+    streak,
+    submitAssignment,
+    loadMySubmissions,
+    setActiveProjectCode,
+    profile,
+  } = useAppStore();
+  const studentPlan = profile?.plan;
   const [submittedIds, setSubmittedIds] = useState(new Set());
   const [submittingId, setSubmittingId] = useState(null);
   const [noteMap, setNoteMap] = useState({});
-  const [shopStatus, setShopStatus] = useState("");
-
   useEffect(() => {
     if (enrolledClass) {
       loadMySubmissions().then((ids) => {
@@ -246,7 +279,9 @@ function StudentClassView() {
     }
   }, [enrolledClass, loadMySubmissions]);
 
-  const handleSubmit = async (assignmentId) => {
+  const legacyAssignments = assignments.filter((a) => parseAssignment(a).type === "legacy");
+
+  const handleLegacySubmit = async (assignmentId) => {
     setSubmittingId(assignmentId);
     try {
       await submitAssignment({ assignmentId, notes: noteMap[assignmentId] || "" });
@@ -255,16 +290,9 @@ function StudentClassView() {
     setSubmittingId(null);
   };
 
-  const buyBooster = (type) => {
-    // FUTURE PREMIUM: To monetize, check if profile?.plan !== 'premium'
-    setShopStatus(`Success! Activated your ${type === 'freeze' ? 'Streak Freeze' : 'Double XP Booster'}.`);
-    setTimeout(() => setShopStatus(""), 4000);
-  };
-
-  const MEDALS = {
-    1: { icon: "🥇", label: "1st Place", bg: "rgba(255,215,0,0.12)", border: "rgba(255,190,0,0.45)", text: "#8a6000" },
-    2: { icon: "🥈", label: "2nd Place", bg: "rgba(192,192,192,0.14)", border: "rgba(160,160,160,0.5)", text: "#5a5a5a" },
-    3: { icon: "🥉", label: "3rd Place", bg: "rgba(205,127,50,0.14)", border: "rgba(180,100,30,0.45)", text: "#7a4a10" },
+  const openAssignmentInIde = (code) => {
+    if (code) setActiveProjectCode(code);
+    onNavigateToIde?.();
   };
 
   return (
@@ -275,18 +303,7 @@ function StudentClassView() {
             <h2 className="text-2xl font-semibold">My Class</h2>
             <p className="mt-1 text-sm text-[var(--muted)]">Your class activity, ranking, assignments, and updates.</p>
           </div>
-          {(streak?.current || 0) > 0 ? (
-            <div className="xenon-panel-muted flex items-center gap-3 p-4">
-              <div className="relative">
-                <Flame className={clsx("h-8 w-8", streak.current >= 7 ? "text-amber-400" : "text-orange-500")} />
-                {streak.current >= 7 && <Zap className="absolute -top-1 -right-1 h-4 w-4 text-sky-400" />}
-              </div>
-              <div>
-                <p className="text-lg font-black leading-none">{streak.current} Day Streak</p>
-                <p className="mt-1 text-[10px] font-bold uppercase text-[var(--muted)]">Best: {streak.longest}</p>
-              </div>
-            </div>
-          ) : null}
+          <StreakBadge streak={streak} />
 
         </div>
       </div>
@@ -346,11 +363,14 @@ function StudentClassView() {
             </div>
           ) : null}
 
-          {assignments.length > 0 ? (
+          <StudentAssignmentWork onOpenIde={openAssignmentInIde} />
+
+          {legacyAssignments.length > 0 ? (
             <div className="xenon-panel p-6">
-              <h3 className="text-lg font-semibold">Assignments</h3>
+              <h3 className="text-lg font-semibold">Other class tasks</h3>
+              <p className="text-xs text-[var(--muted)] mt-1">Practice-goal assignments from your teacher.</p>
               <div className="mt-4 space-y-4">
-                {assignments.map((assignment) => {
+                {legacyAssignments.map((assignment) => {
                   const done = submittedIds.has(assignment.id);
                   const submitting = submittingId === assignment.id;
                   const isOverdue = assignment.due_date && new Date(assignment.due_date) < new Date();
@@ -358,12 +378,13 @@ function StudentClassView() {
                   const hasGoal = !!assignment.question_goal;
                   const goalMet = !hasGoal || questionsCompleted >= assignment.question_goal;
                   const progressPct = hasGoal ? Math.min(100, Math.round((questionsCompleted / assignment.question_goal) * 100)) : 100;
+                  const parsed = parseAssignment(assignment);
                   return (
                     <div key={assignment.id} className="xenon-panel-muted p-5">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold">{assignment.title}</p>
-                          <p className="mt-1 text-sm text-[var(--muted)]">{assignment.description}</p>
+                          <p className="mt-1 text-sm text-[var(--muted)]">{parsed.summary || assignment.description}</p>
                           {assignment.due_date ? (
                             <p className={clsx("mt-1 text-xs font-semibold", isOverdue ? "text-red-500" : "text-[var(--muted)]")}>
                               Due: {new Date(assignment.due_date).toLocaleDateString()} {isOverdue ? "(overdue)" : ""}
@@ -382,17 +403,9 @@ function StudentClassView() {
                               <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
                                 <div
                                   className="h-full rounded-full transition-all"
-                                  style={{
-                                    width: `${progressPct}%`,
-                                    background: goalMet ? "var(--success, #22c55e)" : "var(--accent)",
-                                  }}
+                                  style={{ width: `${progressPct}%`, background: goalMet ? "var(--success, #22c55e)" : "var(--accent)" }}
                                 />
                               </div>
-                              {!goalMet && (
-                                <p className="mt-1.5 text-xs text-[var(--muted)]">
-                                  Complete {assignment.question_goal - questionsCompleted} more question{assignment.question_goal - questionsCompleted === 1 ? "" : "s"} in the Practice tab to unlock submission.
-                                </p>
-                              )}
                             </div>
                           ) : null}
                         </div>
@@ -404,10 +417,9 @@ function StudentClassView() {
                           <button
                             className="xenon-btn shrink-0"
                             disabled={submitting || !goalMet}
-                            title={!goalMet ? `Complete ${assignment.question_goal - questionsCompleted} more questions to unlock` : undefined}
-                            onClick={() => handleSubmit(assignment.id)}
+                            onClick={() => handleLegacySubmit(assignment.id)}
                           >
-                            {submitting ? "Submitting..." : goalMet ? "Mark as Submitted" : `Locked — ${progressPct}% done`}
+                            {submitting ? "Submitting..." : goalMet ? "Mark as Submitted" : `Locked — ${progressPct}%`}
                           </button>
                         )}
                       </div>
@@ -415,7 +427,7 @@ function StudentClassView() {
                         <textarea
                           className="xenon-input mt-3 w-full resize-none text-sm"
                           rows={2}
-                          placeholder="Optional: add a note to your teacher..."
+                          placeholder="Optional note to your teacher..."
                           value={noteMap[assignment.id] || ""}
                           onChange={(event) => setNoteMap((prev) => ({ ...prev, [assignment.id]: event.target.value }))}
                         />
@@ -427,47 +439,7 @@ function StudentClassView() {
             </div>
           ) : null}
 
-          {/* Premium Booster Shop */}
-          <div className="xenon-panel p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold">Revision Boosters</h3>
-                <p className="text-xs text-[var(--muted)] mt-0.5">Activate temporary revision boosts using your practice points.</p>
-              </div>
-              <span className="text-[10px] uppercase font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/25">
-                Pro Boosts Free Now
-              </span>
-            </div>
-            {shopStatus && (
-              <div className="p-3 text-xs bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 rounded-xl font-bold">
-                {shopStatus}
-              </div>
-            )}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="xenon-panel-muted p-4 flex flex-col justify-between items-start gap-3">
-                <div>
-                  <p className="font-bold flex items-center gap-1.5">
-                    <Flame className="h-4 w-4 text-orange-500" /> Streak Freeze
-                  </p>
-                  <p className="text-xs text-[var(--muted)] mt-1">Prevents losing your streak if you miss revision today.</p>
-                </div>
-                <button className="xenon-btn text-xs px-4 h-9" onClick={() => buyBooster("freeze")}>
-                  Activate Freeze
-                </button>
-              </div>
-              <div className="xenon-panel-muted p-4 flex flex-col justify-between items-start gap-3">
-                <div>
-                  <p className="font-bold flex items-center gap-1.5">
-                    <Award className="h-4 w-4 text-amber-500" /> Double XP Booster
-                  </p>
-                  <p className="text-xs text-[var(--muted)] mt-1">Earn 2x experience points for all algorithms solved.</p>
-                </div>
-                <button className="xenon-btn text-xs px-4 h-9" onClick={() => buyBooster("doublexp")}>
-                  Activate 2x XP
-                </button>
-              </div>
-            </div>
-          </div>
+          <StreakBoosters />
 
           {/* Class Roster Directory */}
           <div className="xenon-panel p-6">
@@ -483,19 +455,17 @@ function StudentClassView() {
             
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {(enrolledClass.leaderboard || []).map((peer) => {
-                const userTheme = peer.profiles?.profile_theme || (peer.profiles?.username === "shahzain_j" ? "cyberpunk" : peer.profiles?.username === "izzah_k" ? "pink-glass" : "default");
-                const isPro = userTheme !== "default" || peer.profiles?.plan === "premium";
-                
+                const peerPlan = peer.profiles?.plan;
+                const peerIsPro = isProOrMax(peerPlan);
+
                 return (
                   <div 
                     key={peer.student_id} 
                     className="xenon-panel-muted p-4 flex flex-col justify-between gap-3 border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all rounded-xl relative overflow-hidden"
                   >
-                    {isPro && (
+                    {peerIsPro && (
                       <div className="absolute top-2 right-2">
-                        <span className="text-[7px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-400 border border-sky-400/25 px-1.5 py-0.5 rounded leading-none">
-                          Pro
-                        </span>
+                        <PlanBadge plan={peerPlan} size="sm" />
                       </div>
                     )}
                     
@@ -566,6 +536,8 @@ export default function App() {
   const signOut = useAppStore((s) => s.signOut);
   const streak = useAppStore((s) => s.streak);
   const databaseWarnings = useAppStore((s) => s.databaseWarnings);
+  const showUpgradePrompt = useAppStore((s) => s.showUpgradePrompt);
+  const setShowUpgradePrompt = useAppStore((s) => s.setShowUpgradePrompt);
   const [tab, setTab] = useState("home");
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
@@ -582,10 +554,21 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [recoverAuthState]);
 
+  const refreshStreak = useAppStore((s) => s.refreshStreak);
+
   useEffect(() => {
     if (profile?.role === "teacher") loadTeacherClasses();
     if (profile?.role === "student") loadStudentClass();
   }, [profile?.role, loadTeacherClasses, loadStudentClass]);
+
+  useEffect(() => {
+    if (!user || profile?.role !== "student") return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshStreak();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [user, profile?.role, refreshStreak]);
 
   const navItems = [
     { id: "home", label: "Dashboard", icon: LayoutDashboard },
@@ -597,6 +580,7 @@ export default function App() {
     ...(profile?.role === "student" ? [{ id: "challenge", label: "1v1 Battles", icon: Zap }] : []),
     ...(profile?.role === "student" ? [{ id: "achievements", label: "Achievements", icon: Award }] : []),
     ...(profile?.role === "student" ? [{ id: "leaderboards", label: "Leaderboards", icon: Trophy }] : []),
+    ...(profile?.role === "student" ? [{ id: "mocktests", label: "Mock Tests", icon: ClipboardCheck }] : []),
     { id: "class", label: profile?.role === "teacher" ? "Class Manager" : "My Class", icon: Home },
     { id: "settings", label: "Settings", icon: Settings },
   ];
@@ -625,13 +609,16 @@ export default function App() {
       {/* Sidebar Navigation */}
       <motion.aside 
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-[var(--border)] bg-[var(--panel)] transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-[var(--border)] bg-[var(--panel)] shadow-[var(--shadow)] transition-transform lg:static lg:translate-x-0",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-20 items-center gap-3 px-6">
-          <img src="/xenon-logo.svg" alt="Xenon" className="h-10 w-10 rounded-xl" />
-          <span className="text-xl font-black tracking-tight">XENON CODE</span>
+        <div className="flex h-20 items-center gap-3 px-6 border-b border-[var(--border)]">
+          <img src="/xenon-logo.svg" alt="Xenon" className="h-10 w-10 rounded-xl shadow-md" />
+          <div>
+            <span className="text-lg font-black tracking-tight block leading-none">XENON</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">GCSE Computer Science</span>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-2 custom-scrollbar">
@@ -661,8 +648,13 @@ export default function App() {
           <div className="xenon-panel-muted flex items-center gap-3 p-3">
             <ProfileAvatar name={profile?.full_name || profile?.username} avatarUrl={profile?.avatar_url} size="sm" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold">{profile?.first_name || profile?.username || "Coder"}</p>
-              <p className="truncate text-[10px] font-medium text-[var(--muted)] uppercase tracking-wider">{profile?.role || "Student"}</p>
+              <p className="truncate text-sm font-bold flex items-center gap-1.5 flex-wrap">
+                {profile?.first_name || profile?.username || "Coder"}
+                {isProOrMax(profile?.plan) && <PlanBadge plan={profile?.plan} size="sm" />}
+              </p>
+              <p className="truncate text-[10px] font-medium text-[var(--muted)] uppercase tracking-wider">
+                {normalizePlan(profile?.plan) === "max" ? "Max plan" : isProOrMax(profile?.plan) ? "Pro plan" : profile?.role || "Student"}
+              </p>
             </div>
             <button 
               onClick={signOut}
@@ -702,16 +694,30 @@ export default function App() {
 
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-3">
-              {(streak?.current || 0) > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20 shadow-sm transition-transform hover:scale-105 cursor-default">
+              {((streak?.current || 0) > 0 || streak?.atRisk) && (
+                <div
+                  className={clsx(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl border shadow-sm transition-transform hover:scale-105 cursor-default",
+                    streak?.atRisk
+                      ? "bg-amber-500/10 text-amber-500 border-amber-500/25"
+                      : "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                  )}
+                  title={streak?.atRisk ? "Practise today to keep your streak" : `${streak.current} day streak`}
+                >
                   <Flame className="h-4 w-4 fill-current" />
-                  <span className="text-sm font-black">{streak.current}</span>
+                  <span className="text-sm font-black">{streak?.current || 0}</span>
+                  {streak?.doubleXpActive && <Zap className="h-3.5 w-3.5 text-sky-400" />}
                 </div>
               )}
               <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent-soft)] shadow-sm transition-transform hover:scale-105 cursor-default">
                 <Star className="h-4 w-4 fill-current" />
                 <span className="text-sm font-black">Level {levelProgress.level}</span>
               </div>
+              {isProOrMax(profile?.plan) && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-amber-400/30 bg-amber-500/10">
+                  <PlanBadge plan={profile?.plan} size="md" showGlow />
+                </div>
+              )}
             </div>
 
             <div className="h-8 w-px bg-[var(--border)] hidden sm:block mx-2" />
@@ -746,13 +752,18 @@ export default function App() {
               {tab === "parsons" && <motion.div key="parsons" {...motionProps}><ParsonsProblem /></motion.div>}
               {tab === "challenge" && profile?.role === "student" && <motion.div key="challenge" {...motionProps}><ChallengeArena /></motion.div>}
               {tab === "achievements" && profile?.role === "student" && <AchievementsView key="achievements" />}
-              {tab === "leaderboards" && profile?.role === "student" && <LeaderboardsPanel key="leaderboards" />}
+              {tab === "leaderboards" && profile?.role === "student" && (
+                <LeaderboardsPanel key="leaderboards" onOpenSettings={() => setTab("settings")} />
+              )}
               {tab === "class" && (
                 profile?.role === "teacher" 
                   ? <motion.div key="class" {...motionProps}><ClassDashboard /></motion.div> 
-                  : <StudentClassView key="view-class" />
+                  : <StudentClassView key="view-class" onNavigateToIde={() => setTab("code")} />
               )}
               {tab === "pastpapers" && <motion.div key="pastpapers" {...motionProps}><PastPapersPanel onNavigateToIde={setTab} /></motion.div>}
+              {tab === "mocktests" && profile?.role === "student" && (
+                <motion.div key="mocktests" {...motionProps}><MockTestPanel /></motion.div>
+              )}
               {tab === "settings" && <motion.div key="settings" {...motionProps}><SettingsPanel /></motion.div>}
             </AnimatePresence>
           </div>
@@ -761,6 +772,9 @@ export default function App() {
         </div>
       </main>
 
+      {showUpgradePrompt && (
+        <UpgradeModal onClose={() => setShowUpgradePrompt(false)} />
+      )}
       {showInitOverlay && <InitOverlay onBootstrap={bootstrap} />}
       {showProfileSetup && (
         <ProfileSetupModal 

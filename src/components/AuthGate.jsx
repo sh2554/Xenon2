@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { useAppStore } from "../store/useAppStore";
 import SiteFooter from "./SiteFooter";
 import HomeLanding from "./HomeLanding";
-import { Mail, Lock, User, Briefcase, ArrowRight, ArrowLeft, Sparkles, Code, BookOpen, Shield, Zap } from "lucide-react";
+import { Mail, Lock, User, Briefcase, ArrowRight, ArrowLeft, Sparkles, Code, BookOpen, Shield, Zap, Star } from "lucide-react";
 
 
 const roleOptions = [
@@ -230,7 +230,7 @@ export default function AuthGate({ initialMode = "landing" }) {
           >
             <div className="flex items-center gap-2 mb-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-amber-400 text-sm">★</span>
+                <Star key={i} className="h-3.5 w-3.5 text-amber-400 fill-amber-400/30" />
               ))}
             </div>
             <p className="text-xs text-[var(--muted)] leading-relaxed italic">

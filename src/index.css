@@ -27,6 +27,10 @@
   --code-bg: #f3f7ff;
 }
 
+[data-theme] {
+  --fg: var(--text);
+}
+
 [data-theme="xenon-dark"] {
   --bg: #0a1220;
   --bg-soft: #101b2e;
@@ -295,6 +299,59 @@ h4 {
 
 .xenon-panel {
   border-radius: 26px;
+}
+
+.xenon-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.xenon-page-header h1,
+.xenon-page-header h2 {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.xenon-page-header p {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+  max-width: 36rem;
+}
+
+.xenon-section-label {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.lb-row:hover,
+.lb-podium-slot:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+}
+
+.lb-podium-slot {
+  cursor: pointer;
+}
+
+body {
+  font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, color-mix(in srgb, var(--accent) 8%, transparent), transparent),
+    var(--bg);
 }
 
 .xenon-hero-panel {

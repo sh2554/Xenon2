@@ -4,6 +4,10 @@ import clsx from "clsx";
 import { getLevelProgress, getRankBadge } from "../lib/progression";
 
 import { useAppStore } from "../store/useAppStore";
+import UpgradeModal from "./UpgradeModal";
+import { PLANS } from "../lib/planFeatures";
+import PlanComparisonCards from "./PlanComparisonCards";
+import ProfileThemePicker from "./ProfileThemePicker";
 import ProfileAvatar from "./ProfileAvatar";
 import { AchievementGrid } from "./AchievementsPanel";
 import { 
@@ -29,7 +33,18 @@ const motionProps = {
   transition: { duration: 0.2, ease: "easeOut" }
 };
 
-function SettingsSidebar({ activeSection, onSectionChange, navItems }) {
+function SettingsSidebar({
+  activeSection,
+  onSectionChange,
+  navItems,
+  currentPlan,
+  redeemCode,
+  setRedeemCode,
+  redeemMessage,
+  setRedeemMessage,
+  redeemPlanCode,
+  onUpgradeClick,
+}) {
   return (
     <div className="flex flex-col gap-2 w-full lg:w-72 shrink-0">
       <div className="xenon-panel p-4 lg:p-6 space-y-1">
@@ -62,12 +77,44 @@ function SettingsSidebar({ activeSection, onSectionChange, navItems }) {
       <div className="xenon-panel p-6 bg-gradient-to-br from-[var(--accent-soft)] to-transparent border-none">
         <div className="flex items-center gap-3 text-[var(--accent)] mb-3">
           <ShieldCheck className="h-5 w-5" />
-          <span className="text-xs font-black uppercase tracking-widest">Premium Status</span>
+          <span className="text-xs font-black uppercase tracking-widest">Subscription Plan</span>
         </div>
         <p className="text-xs font-medium text-[var(--muted)] leading-relaxed">
-          Upgrade to <span className="text-[var(--fg)] font-bold">Premium</span> to unlock 1v1 battles, AI debugging, and custom profile themes.
+          Current plan: <strong className="uppercase">{PLANS[currentPlan]?.label || currentPlan}</strong>
         </p>
-        <button className="mt-4 w-full xenon-btn-subtle h-10 text-xs font-black bg-white/50 border-none">Learn More</button>
+        <p className="text-[10px] text-[var(--muted)] mt-1">{PLANS[currentPlan]?.tagline}</p>
+        <p className="text-[10px] text-[var(--muted)] mt-2 leading-relaxed">
+          <strong className="text-amber-300">Pro</strong> = student revision.{" "}
+          <strong className="text-violet-300">Max</strong> = teacher tools (includes Pro).
+        </p>
+        <div className="mt-2 flex gap-2">
+          <input
+            type="text"
+            placeholder="PRO123, MAX456, or FREE"
+            className="flex-1 px-2 py-1 border rounded"
+            value={redeemCode}
+            onChange={(e) => setRedeemCode(e.target.value)}
+          />
+          <button
+            className="xenon-btn-subtle h-10 text-xs font-black"
+            onClick={async () => {
+              try {
+                await redeemPlanCode(redeemCode);
+                setRedeemMessage("Plan upgraded!");
+                setRedeemCode("");
+              } catch (err) {
+                setRedeemMessage(err.message || "Failed to redeem.");
+              }
+            }}
+          >Redeem</button>
+        </div>
+        {redeemMessage && <p className="mt-1 text-xs text-[var(--accent)]">{redeemMessage}</p>}
+        <button
+            className="mt-4 w-full xenon-btn-subtle h-10 text-xs font-black bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white transition-all"
+            onClick={onUpgradeClick}
+          >
+            Compare plans & upgrade
+          </button>
       </div>
     </div>
   );
@@ -78,6 +125,14 @@ export default function SettingsPanel() {
   const enrolledClass = useAppStore((s) => s.enrolledClass);
   const theme = useAppStore((s) => s.theme);
   const achievements = useAppStore((s) => s.achievements);
+  const showUpgradePrompt = useAppStore((s) => s.showUpgradePrompt);
+  const setShowUpgradePrompt = useAppStore((s) => s.setShowUpgradePrompt);
+  const getPlan = useAppStore((s) => s.getPlan);
+  const profilePlan = useAppStore((s) => s.profile?.plan);
+  const redeemPlanCode = useAppStore((s) => s.redeemPlanCode);
+  const currentPlan = typeof getPlan === "function" ? getPlan() : (profilePlan || "free");
+  const [redeemCode, setRedeemCode] = useState("");
+  const [redeemMessage, setRedeemMessage] = useState("");
   const friends = useAppStore((s) => s.friends) || [];
   const incomingFriendRequests = useAppStore((s) => s.incomingFriendRequests) || [];
   const outgoingFriendRequests = useAppStore((s) => s.outgoingFriendRequests) || [];
@@ -271,6 +326,14 @@ export default function SettingsPanel() {
 
   const rankBadge = getRankBadge(enrolledClass?.rank);
 
+  if (!profile) {
+    return (
+      <div className="xenon-panel p-10 text-center">
+        <p className="text-sm font-bold text-[var(--muted)]">Loading settings…</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
@@ -278,6 +341,13 @@ export default function SettingsPanel() {
           activeSection={activeSection} 
           onSectionChange={setActiveSection} 
           navItems={navItems}
+          currentPlan={currentPlan}
+          redeemCode={redeemCode}
+          setRedeemCode={setRedeemCode}
+          redeemMessage={redeemMessage}
+          setRedeemMessage={setRedeemMessage}
+          redeemPlanCode={redeemPlanCode}
+          onUpgradeClick={() => setShowUpgradePrompt(true)}
         />
 
         <div className="flex-1 min-w-0 pb-20">
@@ -413,61 +483,9 @@ export default function SettingsPanel() {
                   </div>
                 </div>
 
-                {/* [TIER: PRO] Public Profile Theme Customization & Unlockables */}
                 {profile?.role === "student" && (
                   <div className="xenon-panel p-6 sm:p-8">
-                    <div className="flex items-center gap-4 mb-8">
-                      <div className="h-12 w-12 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)]">
-                        <Sparkles className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-black tracking-tight">Public Profile & Leaderboard Theme</h3>
-                        <p className="mt-1 text-sm text-[var(--muted)] font-medium">Stand out in leaderboards with custom colors, glows, and titles.</p>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {[
-                        { value: "default", label: "GCSE Apprentice", desc: "Default theme. Available for everyone.", minLevel: 1 },
-                        { value: "pink-glass", label: "🌸 Sakura Spark", desc: "Unlock: Reach Level 5 or Top 3 in Class.", minLevel: 5, rankReq: 3 },
-                        { value: "oled", label: "🌌 Dark Mode Overlord", desc: "Unlock: Reach Level 8.", minLevel: 8 },
-                        { value: "cyberpunk", label: "👑 Cyberpunk Wizard", desc: "Unlock: Reach Level 10 or 1st Place in Class.", minLevel: 10, rankReq: 1 },
-                      ].map((t) => {
-                        const currentLevel = profile?.level || 1;
-                        const currentRank = enrolledClass?.rank || 999;
-                        const isUnlocked = 
-                          currentLevel >= t.minLevel || 
-                          (t.rankReq && currentRank <= t.rankReq);
-
-                        const activeTheme = profile?.profile_theme || profile?.avatar_url || "default";
-
-                        return (
-                          <button
-                            key={t.value}
-                            disabled={!isUnlocked}
-                            onClick={() => useAppStore.getState().setProfileTheme(t.value)}
-                            className={clsx(
-                              "group relative flex flex-col items-start rounded-2xl border-2 p-6 transition-all text-left w-full",
-                              !isUnlocked ? "opacity-50 cursor-not-allowed border-dashed bg-black/10" :
-                              activeTheme === t.value ? "border-amber-500 bg-amber-500/5" : "border-[var(--border)] hover:border-[var(--muted)]"
-                            )}
-                          >
-                            <span className="text-sm font-black text-white">{t.label}</span>
-                            <span className="text-xs text-[var(--muted)] mt-1 font-medium">{t.desc}</span>
-                            
-                            {!isUnlocked ? (
-                              <div className="absolute top-4 right-4 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/25 px-2 py-0.5 rounded flex items-center gap-1">
-                                🔒 Locked
-                              </div>
-                            ) : activeTheme === t.value ? (
-                              <div className="absolute top-4 right-4">
-                                <Check className="h-4 w-4 text-amber-500" />
-                              </div>
-                            ) : null}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <ProfileThemePicker />
                   </div>
                 )}
               </motion.div>
@@ -641,6 +659,38 @@ export default function SettingsPanel() {
             {activeSection === "account" && (
               <motion.div key="account" {...motionProps} className="space-y-6">
                 <div className="xenon-panel p-6 sm:p-8">
+                  <h3 className="text-xl font-black tracking-tight">Subscription & redemption</h3>
+                  <p className="mt-1 text-sm text-[var(--muted)] font-medium mb-6">
+                    Upgrade with a code until Stripe billing is enabled. Current plan: <strong className="uppercase">{currentPlan}</strong>.
+                  </p>
+                  <PlanComparisonCards currentPlan={currentPlan} compact />
+                  <div className="flex flex-wrap gap-2 max-w-md">
+                    <input
+                      className="xenon-input flex-1 min-w-[140px]"
+                      placeholder="PRO123, MAX456, or FREE"
+                      value={redeemCode}
+                      onChange={(e) => setRedeemCode(e.target.value)}
+                    />
+                    <button
+                      className="xenon-btn"
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await redeemPlanCode(redeemCode);
+                          setRedeemMessage("Plan upgraded!");
+                          setRedeemCode("");
+                        } catch (err) {
+                          setRedeemMessage(err.message || "Invalid code.");
+                        }
+                      }}
+                    >
+                      Redeem
+                    </button>
+                  </div>
+                  {redeemMessage && <p className="text-xs text-[var(--accent)] mt-2">{redeemMessage}</p>}
+                </div>
+
+                <div className="xenon-panel p-6 sm:p-8">
                   <h3 className="text-xl font-black tracking-tight">Account Security</h3>
                   <p className="mt-1 text-sm text-[var(--muted)] font-medium mb-8">Keep your account safe and your credentials up to date.</p>
                   
@@ -759,6 +809,9 @@ export default function SettingsPanel() {
           </div>
         )}
       </AnimatePresence>
+      {showUpgradePrompt && (
+        <UpgradeModal onClose={() => setShowUpgradePrompt(false)} />
+      )}
     </>
   );
 }

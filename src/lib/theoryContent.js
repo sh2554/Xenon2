@@ -7,23 +7,28 @@ export const THEORY_UNITS = [
     notes: [
       {
         heading: "Purpose of the CPU",
-        body: "The CPU (Central Processing Unit) is the hardware that executes programs and manages the rest of the hardware. It is often called the 'brain' of the computer.\n\nKey functions:\n• To process data and instructions\n• To control the rest of the computer system\n• To perform the Fetch-Decode-Execute cycle",
+        body: "The CPU (Central Processing Unit) is the hardware that executes programs and manages the rest of the hardware. It is often called the 'brain' of the computer.\n\nKey functions:\n• To process data and instructions\n• To control the rest of the computer system\n• To perform the Fetch-Decode-Execute cycle\n\nExam tip: In 1-mark questions, mention fetch, decode and execute — not just 'runs programs'.",
+        proDetail: "OCR often asks you to link the CPU to the FDE cycle in 2–3 mark questions. A strong answer names the PC (next address), MAR/MDR (memory transfer), CU (decode/control signals), and ALU (arithmetic/logic). Mention that clock speed × cores × cache size all affect effective performance, not just GHz alone.",
       },
       {
         heading: "Von Neumann Architecture",
-        body: "Most modern computers use Von Neumann architecture, where both data and instructions are stored in the same memory (RAM).\n\nKey Components:\n• Control Unit (CU): Decodes instructions and sends signals to control data flow.\n• ALU (Arithmetic Logic Unit): Performs all mathematical and logical operations.\n• Cache: High-speed memory inside the CPU that stores frequently used data.\n• Registers: Small, fast storage locations inside the CPU.",
+        body: "Most modern computers use Von Neumann architecture, where both data and instructions are stored in the same memory (RAM).\n\nKey Components:\n• Control Unit (CU): Decodes instructions and sends signals to control data flow.\n• ALU (Arithmetic Logic Unit): Performs all mathematical and logical operations.\n• Cache: High-speed memory inside the CPU that stores frequently used data.\n• Registers: Small, fast storage locations inside the CPU.\n\nThe von Neumann bottleneck: the CPU and memory share one bus, so they cannot both be accessed at full speed at the same time.",
+        proDetail: "Contrast with Harvard architecture (separate buses for instructions and data) — useful in 4–6 mark compare questions. Be ready to draw a simple block diagram: CPU ↔ bus ↔ RAM, with cache between CPU and RAM.",
       },
       {
         heading: "CPU Registers (OCR/AQA focus)",
-        body: "• Program Counter (PC): Holds the address of the next instruction to be fetched.\n• Memory Address Register (MAR): Holds the address of the current instruction/data being read from or written to memory.\n• Memory Data Register (MDR): Holds the actual data or instruction fetched from memory.\n• Accumulator (ACC): Holds the results of calculations performed by the ALU.",
+        body: "• Program Counter (PC): Holds the address of the next instruction to be fetched.\n• Memory Address Register (MAR): Holds the address of the current instruction/data being read from or written to memory.\n• Memory Data Register (MDR): Holds the actual data or instruction fetched from memory.\n• Accumulator (ACC): Holds the results of calculations performed by the ALU.\n• Current Instruction Register (CIR): Holds the instruction currently being decoded (OCR-specific).",
+        proDetail: "Trace table questions: when PC increments, it is usually by the size of one instruction. For 'describe fetch', write: address from PC → MAR; data from memory address → MDR → CIR; PC incremented.",
       },
       {
         heading: "The FDE Cycle",
-        body: "1. Fetch: The CPU fetches the next instruction from RAM using the address in the PC. The instruction is moved to the MDR.\n2. Decode: The Control Unit (CU) decodes the instruction to understand what needs to be done.\n3. Execute: The instruction is carried out. This might involve calculations in the ALU or moving data between registers.",
+        body: "1. Fetch: The CPU fetches the next instruction from RAM using the address in the PC. The instruction is moved to the MDR/CIR.\n2. Decode: The Control Unit (CU) decodes the instruction to understand what needs to be done.\n3. Execute: The instruction is carried out. This might involve calculations in the ALU or moving data between registers.\n\nThis cycle repeats billions of times per second (clock speed).",
+        proDetail: "Extended response: include that decode sends control signals; execute may update ACC or memory; PC updates ready for next fetch. Interrupts can pause the cycle to handle urgent events (keyboard, timer).",
       },
       {
         heading: "CPU Performance Factors",
-        body: "• Clock Speed: Measured in Hertz (Hz). The number of FDE cycles a CPU can perform per second.\n• Number of Cores: Each core can process an instruction independently. Multiple cores allow multitasking.\n• Cache Size: Larger cache reduces the time the CPU spends waiting for data from RAM.",
+        body: "• Clock Speed: Measured in Hertz (Hz). The number of FDE cycles a CPU can perform per second.\n• Number of Cores: Each core can process an instruction independently. Multiple cores help multitasking and parallel programs.\n• Cache Size: Larger cache reduces the time the CPU spends waiting for data from RAM.\n\nMore cores do not always double speed — software must support parallel execution.",
+        proDetail: "6-mark explain: give a scenario (gaming vs word processing). Word processing may not use all cores; video encoding benefits from many cores. Cache hit rate matters: L1 fastest, L2/L3 larger but slower.",
       },
     ],
     flashcards: [
@@ -43,7 +48,8 @@ export const THEORY_UNITS = [
     notes: [
       {
         heading: "Primary vs Secondary Storage",
-        body: "• Primary Storage: Memory that the CPU can access directly (RAM, ROM, Cache). Usually volatile (except ROM).\n• Secondary Storage: Non-volatile storage used for long-term data (HDD, SSD, Optical). Not directly accessible by the CPU.",
+        body: "• Primary Storage: Memory that the CPU can access directly (RAM, ROM, Cache). Usually volatile (except ROM).\n• Secondary Storage: Non-volatile storage used for long-term data (HDD, SSD, Optical). Not directly accessible by the CPU — data must be loaded into RAM first.\n\nCapacity vs speed: primary is faster but smaller; secondary is larger but slower.",
+        proDetail: "Compare HDD vs SSD for exam essays: SSD = flash, no moving parts, faster boot, lower latency; HDD = magnetic platters, cheaper per GB, mechanical failure risk. Always state volatility for RAM vs ROM.",
       },
       {
         heading: "RAM vs ROM",

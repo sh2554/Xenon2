@@ -3,11 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "../store/useAppStore";
 import { supabase } from "../lib/supabase";
 import { translateSupabaseError } from "../lib/errorTranslator";
+import { buildStudentHeatmapRows, exportRosterProgressReport, exportRosterCsv } from "../lib/rosterExport";
+import SpecHeatmapGrid from "./SpecHeatmapGrid";
 import { 
   Trophy, School, Users, Clock, BookOpen, Send, Trash2, Calendar, Target, 
   RefreshCw, LayoutDashboard, Megaphone, ClipboardList, Shield, X, Plus, ChevronRight, BarChart3, Search,
   Sparkles, AlertTriangle, CheckCircle, FileDown
 } from "lucide-react";
+import ClassAssignmentsBuilder from "./ClassAssignmentsBuilder";
+import RankMedal from "./RankMedal";
 
 
 const formatPracticeTime = (seconds = 0) => {
@@ -18,13 +22,6 @@ const formatPracticeTime = (seconds = 0) => {
   if (minutes > 0) return `${minutes}m`;
   return `${totalSeconds}s`;
 };
-
-const MEDALS = {
-  1: { icon: <Trophy className="h-5 w-5 text-amber-400" />, label: "1st Place", bg: "rgba(255,215,0,0.12)", border: "rgba(255,190,0,0.45)", text: "#8a6000" },
-  2: { icon: <Trophy className="h-5 w-5 text-slate-400" />, label: "2nd Place", bg: "rgba(192,192,192,0.14)", border: "rgba(160,160,160,0.5)", text: "#5a5a5a" },
-  3: { icon: <Trophy className="h-5 w-5 text-orange-400" />, label: "3rd Place", bg: "rgba(205,127,50,0.14)", border: "rgba(180,100,30,0.45)", text: "#7a4a10" },
-};
-
 
 const CARD_ACCENTS = [
   "#4fb8ff", "#a78bfa", "#34d399", "#fb923c",
@@ -185,7 +182,7 @@ function SubmissionItem({ submission: s }) {
   );
 }
 
-function ClassAssignmentsPanel({ cls }) {
+function ClassAssignmentsPanel_DEPRECATED({ cls }) {
   const { postAssignment, deleteAssignment, loadSubmissions, databaseWarnings } = useAppStore();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -325,8 +322,17 @@ function ClassAssignmentsPanel({ cls }) {
 // ─── Class detail view (shown after selecting a card) ─────────────────────────
 
 function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
+  const loadClassMockHeatmaps = useAppStore((s) => s.loadClassMockHeatmaps);
+  const classMockResultsByStudent = useAppStore((s) => s.classMockResultsByStudent);
+
+  useEffect(() => {
+    if (cls?.id) loadClassMockHeatmaps(cls.id);
+  }, [cls?.id, loadClassMockHeatmaps]);
+  const hasFeature = useAppStore((s) => s.hasFeature);
+  const setShowUpgradePrompt = useAppStore((s) => s.setShowUpgradePrompt);
   const [tab, setTab] = useState("overview");
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanComplete, setScanComplete] = useState(false);
@@ -367,7 +373,13 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
           {TABS.map((t) => (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => {
+                if (t.id === "plagiarism" && !hasFeature("plagiarismScanner")) {
+                  setShowUpgradePrompt(true);
+                  return;
+                }
+                setTab(t.id);
+              }}
               className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black text-sm transition-all ${
                 tab === t.id 
                   ? "bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent-soft)]" 
@@ -408,76 +420,82 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
               <div>
                 <p className="text-xs font-black uppercase tracking-widest text-[var(--accent)]">School Max Premium Tools</p>
                 <h4 className="text-lg font-bold mt-1">One-Click GCSE Roster Progress Exporter</h4>
-                <p className="text-xs text-[var(--muted)] mt-0.5">Generate print-ready progress sheets for student files or parents' evening folders.</p>
+                <p className="text-xs text-[var(--muted)] mt-0.5">
+                  Opens a print-ready report in a new tab. In the print dialog, choose &quot;Save as PDF&quot; to download.
+                </p>
               </div>
               {/* [TIER: SCHOOL] */}
               <button 
                 onClick={() => {
+                  if (!hasFeature("rosterProgressExport")) {
+                    setShowUpgradePrompt(true);
+                    return;
+                  }
+                  setExportError("");
                   setExporting(true);
-                  setTimeout(() => {
+                  try {
+                    exportRosterProgressReport(cls);
+                  } catch (e) {
+                    setExportError(e?.message || "Export failed.");
+                  } finally {
                     setExporting(false);
-                    window.print();
-                  }, 500);
+                  }
                 }}
                 disabled={exporting}
                 className="xenon-btn flex items-center gap-2 text-xs py-2 px-4"
               >
-                <FileDown className="h-4 w-4" /> {exporting ? "Compiling PDF..." : "Export Progress Report (PDF)"}
+                <FileDown className="h-4 w-4" /> {exporting ? "Opening report…" : "Export Progress Report (PDF)"}
               </button>
+              {exportError && <p className="w-full text-xs text-red-400 mt-2">{exportError}</p>}
+              {!hasFeature("rosterProgressExport") && (
+                <p className="w-full text-[10px] text-[var(--muted)] mt-2">Requires Max plan — redeem <strong>MAX456</strong> in Settings.</p>
+              )}
             </div>
 
-            {/* School Analytics Spec Heatmaps */}
+            {/* School Analytics Spec Heatmaps — Max only */}
             <div className="xenon-panel p-8 border-none bg-gradient-to-br from-[#0d1726] to-transparent">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
                 <div>
                   <h3 className="text-xl font-black tracking-tight">Curriculum Spec Heatmap</h3>
-                  <p className="text-sm text-[var(--muted)]">Mastery level of students across the OCR J277 GCSE Computer Science curriculum spec points.</p>
+                  <p className="text-sm text-[var(--muted)]">Shows students who completed a Max mock test — mastery is from tests only.</p>
                 </div>
-                <span className="text-[9px] font-black uppercase bg-sky-500/10 text-sky-400 border border-sky-400/25 px-1.5 py-0.5 rounded leading-none">
-                  School Max Heatmaps
+                <span className="text-[9px] font-black uppercase bg-violet-500/10 text-violet-300 border border-violet-400/25 px-1.5 py-0.5 rounded leading-none">
+                  Max exclusive
                 </span>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {(() => {
-                  const avgCorrect = (cls.class_members || []).reduce((acc, m) => acc + (m.practice_questions_correct || 0), 0) / Math.max(1, cls.class_members?.length || 1);
-                  const baseMastery = Math.min(100, (avgCorrect / 15) * 100);
-
-                  const calculateMastery = (base, variance) => {
-                    if (base === 0) return 0;
-                    return Math.min(100, Math.max(5, Math.round(base + variance)));
-                  };
-
-                  const getHeatmapColor = (percent) => {
-                    if (percent >= 80) return { color: "border-emerald-500/50 bg-emerald-500/5 text-emerald-400", label: "Highly Proficient" };
-                    if (percent >= 60) return { color: "border-emerald-500/50 bg-emerald-500/5 text-emerald-400", label: "Proficient" };
-                    if (percent >= 40) return { color: "border-amber-500/50 bg-amber-500/5 text-amber-400", label: "Intermediate" };
-                    if (percent >= 20) return { color: "border-red-500/50 bg-red-500/5 text-red-400", label: "Intermediate Support" };
-                    return { color: "border-red-500/50 bg-red-500/5 text-red-400", label: "Critical Support Area" };
-                  };
-
-                  const topics = [
-                    { name: "1.1 CPU Architecture", val: calculateMastery(baseMastery, 10) },
-                    { name: "1.2 Memory & Storage", val: calculateMastery(baseMastery, 5) },
-                    { name: "1.3 Networks & Protocols", val: calculateMastery(baseMastery, -10) },
-                    { name: "2.1 Algorithms (Past Papers)", val: calculateMastery(baseMastery, -15) },
-                    { name: "2.2 Programming Fundamentals", val: calculateMastery(baseMastery, 0) },
-                    { name: "2.4 Boolean Logic & Truth Tables", val: calculateMastery(baseMastery, -5) },
-                  ].map(t => ({ topic: t.name, level: `${t.val}%`, ...getHeatmapColor(t.val) }));
-
-                  return topics.map((spec, i) => (
-                    <div key={i} className={`p-4 rounded-2xl border ${spec.color} flex flex-col justify-between h-28`}>
-                      <div>
-                        <p className="text-xs font-black uppercase tracking-wider opacity-60">OCR Spec Point</p>
-                        <h4 className="text-sm font-bold mt-1 line-clamp-1">{spec.topic}</h4>
+              {!hasFeature("specHeatmapPerStudent") ? (
+                <div className="py-10 text-center border border-dashed border-violet-400/30 rounded-2xl">
+                  <p className="text-sm font-bold text-violet-300">Max plan required</p>
+                  <p className="text-xs text-[var(--muted)] mt-2 max-w-md mx-auto">
+                    Redeem <strong>MAX456</strong> in Settings to unlock per-student heatmaps and class analytics.
+                  </p>
+                  <button type="button" className="xenon-btn mt-4 text-xs" onClick={() => setShowUpgradePrompt(true)}>
+                    View Max features
+                  </button>
+                </div>
+              ) : (
+              <div className="space-y-4">
+                {buildStudentHeatmapRows(cls.class_members || [], classMockResultsByStudent).length === 0 ? (
+                  <p className="text-sm text-[var(--muted)] italic">
+                    No mock test data yet. Max-plan students complete a mock test in My Class → Mock Tests; results appear here only.
+                  </p>
+                ) : (
+                  buildStudentHeatmapRows(cls.class_members || [], classMockResultsByStudent).map((student) => (
+                    <div key={student.studentId || student.username} className="rounded-2xl border border-[var(--border)] p-5 bg-white/[0.02]">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <div>
+                          <p className="text-sm font-black">{student.name}</p>
+                          <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">
+                            @{student.username || "n/a"} · {student.mockTestCount} mock test{student.mockTestCount === 1 ? "" : "s"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
-                        <span className="text-[10px] font-bold">{spec.label}</span>
-                        <span className="text-sm font-black">{spec.level} Mastery</span>
-                      </div>
+                      <SpecHeatmapGrid topics={student.topics} compact />
                     </div>
-                  ));
-                })()}
+                  ))
+                )}
               </div>
+              )}
             </div>
 
             {/* Leaderboard Section */}
@@ -493,16 +511,13 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
               <div className="space-y-3">
                 {(cls.leaderboard || cls.class_members || []).slice(0, 5).map((member, index) => {
                   const rank = index + 1;
-                  const medal = MEDALS[rank];
                   return (
                     <div
                       key={member.student_id}
                       className="group flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-[var(--accent)]/30 transition-all"
                     >
                       <div className="flex items-center gap-5">
-                        <div className="w-10 text-center font-black text-[var(--muted)] group-hover:text-[var(--accent)] transition-colors">
-                          {medal ? medal.icon : `#${rank}`}
-                        </div>
+                        <RankMedal rank={rank} size="sm" />
                         <div>
                           <p className="font-black text-sm">
                             {member.profiles?.first_name || member.profiles?.username || "Student"}
@@ -551,7 +566,7 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
                <p className="mt-1 text-sm text-[var(--muted)]">Set curriculum goals and monitor live submissions.</p>
              </div>
              <div className="xenon-panel p-8 border-none bg-white/[0.02]">
-               <ClassAssignmentsPanel cls={cls} />
+               <ClassAssignmentsBuilder cls={cls} />
              </div>
           </div>
         )}
@@ -562,10 +577,10 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-2xl font-black tracking-tight">AI & Plagiarism Dashboard</h3>
-                <p className="text-sm text-[var(--muted)]">Scan student submissions against class peers and global AI signature patterns.</p>
+                <p className="text-sm text-[var(--muted)]">Scan student submissions against class peers and global AI signature patterns (Max plan).</p>
               </div>
-              <span className="text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-400/25 px-1.5 py-0.5 rounded leading-none">
-                School Max Enabled
+              <span className="text-[9px] font-black uppercase bg-violet-500/10 text-violet-300 border border-violet-400/25 px-1.5 py-0.5 rounded leading-none">
+                Max exclusive
               </span>
             </div>
 
@@ -591,7 +606,19 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
                 <h3 className="text-2xl font-black tracking-tight">Student Directory</h3>
                 <p className="text-sm text-[var(--muted)]">Complete roster and individual performance metrics.</p>
               </div>
-              <button className="xenon-btn-subtle text-xs"><Plus className="h-3 w-3 mr-2" /> Export CSV</button>
+              <button
+                className="xenon-btn-subtle text-xs"
+                type="button"
+                onClick={() => {
+                  if (!hasFeature("rosterCsvExport")) {
+                    setShowUpgradePrompt(true);
+                    return;
+                  }
+                  exportRosterCsv(cls);
+                }}
+              >
+                <Plus className="h-3 w-3 mr-2" /> Export CSV {hasFeature("rosterCsvExport") ? "" : "(Max)"}
+              </button>
             </div>
 
             <div className="xenon-panel p-0 overflow-hidden border-none bg-white/[0.01]">
@@ -689,7 +716,7 @@ function ClassTile({ cls, onClick }) {
             <span className="xenon-badge">{studentCount} student{studentCount !== 1 ? "s" : ""}</span>
           </div>
           <span className="text-xs text-[var(--muted)] opacity-0 transition group-hover:opacity-100">
-            Open →
+            <span className="flex items-center gap-1">Open <ChevronRight className="h-3 w-3" /></span>
           </span>
         </div>
       </div>

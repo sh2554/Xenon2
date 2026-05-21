@@ -20,6 +20,7 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS level              INTEGER     NOT
 -- questions_solved is written by markPracticeSkillCorrect() directly on profiles
 -- so the GLOBAL leaderboard can read it without RLS restrictions on class_members.
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS questions_solved   INTEGER     NOT NULL DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan               TEXT        NOT NULL DEFAULT 'free';
 
 
 

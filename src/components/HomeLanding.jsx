@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { THEORY_UNITS } from "../lib/theoryContent";
+import { PRICING_PLANS } from "../lib/planFeatures";
 
 function TheoryHubPreview() {
   return (
@@ -255,59 +256,6 @@ const REVIEWS = [
     stars: 5,
     tag: "Highly Recommended",
     avatar: "JM"
-  }
-];
-
-const PRICING_PLANS = [
-  {
-    id: "free",
-    name: "Student",
-    price: "0",
-    description: "Perfect for students starting their GCSE Computer Science journey.",
-    features: [
-      "Online Python IDE",
-      "Save up to 10 Projects",
-      "Classroom Participation",
-      "Daily Coding Streaks",
-      "Double Arena Leaderboards (Free)"
-    ],
-    cta: "Start Learning",
-    popular: false,
-    color: "var(--muted)"
-  },
-  {
-    id: "premium",
-    name: "Pro Student",
-    price: "4.99",
-    description: "Enhanced tools for serious independent learners.",
-    features: [
-      "Unlimited Projects",
-      "💡 GCSE AI Error Explanations",
-      "📚 Interactive GCSE Past Papers",
-      "🎨 Premium IDE Skins & Custom Fonts",
-      "⚡ 1v1 Battles & Shop Boosters",
-      "Priority Spec Support"
-    ],
-    cta: "Go Pro",
-    popular: true,
-    color: "var(--accent)"
-  },
-  {
-    id: "max",
-    name: "School Max",
-    price: "19.99",
-    description: "The complete package for schools and teachers.",
-    features: [
-      "Up to 150 Students",
-      "🚨 AST Plagiarism & AI-Copy Detector",
-      "📊 OCR Spec Point Analytics Heatmap",
-      "🖨️ One-Click Progress PDF Exporter",
-      "🤖 AI Feedback Drafts for Teachers",
-      "Dedicated Teacher Onboarding"
-    ],
-    cta: "Contact for Schools",
-    popular: false,
-    color: "#60a5fa"
   }
 ];
 
@@ -623,8 +571,14 @@ export default function HomeLanding({ onLogin, onSignup }) {
                     <span className="ml-1 text-sm font-bold text-[var(--muted)]">/mo</span>
                   </div>
                   <p className="mt-4 text-sm font-medium text-[var(--muted)] leading-relaxed">{plan.description}</p>
+                  {plan.alsoIncludes && (
+                    <p className="mt-3 text-[11px] font-bold text-[var(--accent)]">{plan.alsoIncludes}</p>
+                  )}
                 </div>
                 
+                <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted)] mb-3">
+                  {plan.exclusiveLabel || "Includes"}
+                </p>
                 <ul className="mb-10 space-y-4 flex-1">
                   {plan.features.map((feat, i) => (
                     <li key={i} className="flex items-start gap-3 text-sm font-medium">

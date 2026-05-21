@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { THEORY_UNITS } from "../lib/theoryContent";
+import { useAppStore } from "../store/useAppStore";
+import { hasFeature } from "../lib/planFeatures";
 import {
   BookOpen,
   Layers,
@@ -535,6 +537,8 @@ function KeyTerms({ unit }) {
 // ─── Topic detail view ─────────────────────────────────────────────────────────
 
 function TopicDetail({ unit, onBack }) {
+  const profilePlan = useAppStore((s) => s.profile?.plan);
+  const canViewProNotes = hasFeature(profilePlan, "extendedTheoryNotes");
   const [tab, setTab] = useState("notes");
   const [inFlashcards, setInFlashcards] = useState(false);
   const [inQuiz, setInQuiz] = useState(false);
@@ -643,6 +647,19 @@ function TopicDetail({ unit, onBack }) {
                       <p className="xenon-code whitespace-pre-wrap text-sm leading-7 text-[var(--text)]">
                         {section.body}
                       </p>
+                      {section.proDetail && canViewProNotes && (
+                        <div className="mt-5 pt-5 border-t border-[var(--accent)]/20">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)] mb-2">Pro — examiner depth</p>
+                          <p className="xenon-code whitespace-pre-wrap text-sm leading-7 text-[var(--muted)]">
+                            {section.proDetail}
+                          </p>
+                        </div>
+                      )}
+                      {section.proDetail && !canViewProNotes && (
+                        <p className="mt-4 text-xs text-[var(--muted)]">
+                          Redeem <strong>PRO123</strong> in Account Settings for extended examiner notes on this topic.
+                        </p>
+                      )}
                     </div>
                   </motion.div>
                 )}

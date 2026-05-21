@@ -4,6 +4,8 @@ import Editor from "@monaco-editor/react";
 import { getPyodideWorker, sendInputToWorker } from "../lib/pyodide";
 import { translatePythonError } from "../lib/errorTranslator";
 import { useAppStore } from "../store/useAppStore";
+import PlanBadge from "./PlanBadge";
+import { isProOrMax, isMax, hasFeature, normalizePlan } from "../lib/planFeatures";
 import { Play, Save, FilePlus, Sparkles, Database, X, BookOpen, AlertCircle, Terminal, History, ArrowRight, FileText, Layers } from "lucide-react";
 import { GCSE_QUESTIONS } from "../lib/gcseQuestions";
 
@@ -72,31 +74,43 @@ const buildMonacoTheme = (monaco) => {
   });
 };
 
-function ErrorTranslatorButton({ rawError }) {
+function ErrorTranslatorButton({ rawError, sourceCode = "" }) {
   const [expanded, setExpanded] = useState(false);
   const [translation, setTranslation] = useState("");
+  const plan = useAppStore((s) => normalizePlan(s.profile?.plan));
+  const setShowUpgradePrompt = useAppStore((s) => s.setShowUpgradePrompt);
+  const canExplain = hasFeature(plan, "aiErrorExplain");
 
   const handleTranslate = () => {
-    // FUTURE PREMIUM: To monetize, check if user plan is free and open upgrade dialog here.
-    setTranslation(translatePythonError(rawError));
+    if (!canExplain) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+    setTranslation(translatePythonError(rawError, sourceCode));
     setExpanded((prev) => !prev);
   };
 
   return (
     <div className="w-full mt-1">
       <button
+        type="button"
         onClick={handleTranslate}
-        className="text-[10px] font-black uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/25 px-2 py-0.5 rounded flex items-center gap-1.5 transition-all"
+        className="text-[10px] font-black uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/25 px-2 py-1 rounded-lg flex items-center gap-1.5 transition-all"
       >
         <Sparkles className="h-3 w-3" /> Explain with Xenon AI
+        {!canExplain && (
+          <span className="text-[8px] bg-amber-500/20 text-amber-200 border border-amber-500/30 px-1.5 py-0.5 rounded ml-1">
+            PRO
+          </span>
+        )}
       </button>
       {expanded && translation && (
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-2 p-3 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent-soft)] text-xs text-sky-200 leading-relaxed font-sans font-medium"
+          className="mt-2 p-4 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-soft)] text-xs text-[var(--text)] leading-relaxed font-sans whitespace-pre-wrap"
         >
-          <p className="font-bold text-[10px] text-[var(--accent)] uppercase tracking-wider mb-1">Xenon GCSE AI Hints:</p>
+          <p className="font-black text-[10px] text-[var(--accent)] uppercase tracking-wider mb-2">Xenon GCSE AI — line-by-line</p>
           {translation}
         </motion.div>
       )}
@@ -220,7 +234,6 @@ export default function XenonIDE() {
       appendConsoleLine({ type: "in", text: value });
       sendInputToWorker(value);
       setTerminalInput("");
-      setIsWaitingForInput(false);
     }
   };
 
@@ -290,9 +303,20 @@ export default function XenonIDE() {
   };
 
   const useChallenge = () => {
-    const text = `# Challenge\n# ${GCSE_QUESTIONS[challengeIndex]}\n\n`;
+    const comment = `# Challenge\n# ${GCSE_QUESTIONS[challengeIndex]}`;
     const currentCode = useAppStore.getState().activeProject?.code || "";
-    const newCode = `${text}${currentCode}`;
+    let newCode = "";
+    if (currentCode.trim()) {
+      if (currentCode.endsWith("\n\n")) {
+        newCode = `${currentCode}${comment}`;
+      } else if (currentCode.endsWith("\n")) {
+        newCode = `${currentCode}\n${comment}`;
+      } else {
+        newCode = `${currentCode}\n\n${comment}`;
+      }
+    } else {
+      newCode = comment;
+    }
     setActiveProjectCode(newCode);
     if (editorRef.current) {
       editorRef.current.setValue(newCode);
@@ -318,12 +342,40 @@ export default function XenonIDE() {
     };
   }, [profile?.role, enrolledClass?.id, queuePracticeTime, flushPracticeTime]);
 
+  const setShowUpgradePrompt = useAppStore((s) => s.setShowUpgradePrompt);
+  const userIsPro = isProOrMax(profile?.plan);
+  const userIsMax = isMax(profile?.plan);
+  const canUseProSkins = hasFeature(profile?.plan, "premiumIdeSkins");
+
+  const openProSkins = () => {
+    if (!canUseProSkins) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+    setShowProSkins(true);
+  };
+
   return (
     <div className="space-y-4">
+      {userIsPro && (
+        <div className={`xenon-panel px-5 py-3 flex flex-wrap items-center justify-between gap-3 border ${userIsMax ? "border-violet-400/30 bg-gradient-to-r from-violet-500/10 to-amber-500/5" : "border-amber-400/30 bg-gradient-to-r from-amber-500/10 to-transparent"}`}>
+          <div className="flex items-center gap-3">
+            <PlanBadge plan={profile?.plan} size="md" showGlow />
+            <p className="text-sm font-bold text-amber-200/90">
+              {userIsMax
+                ? "Max plan — includes all Pro features plus teacher class tools."
+                : "Pro plan active — unlimited projects, full past papers, extended theory & IDE skins."}
+            </p>
+          </div>
+        </div>
+      )}
       <motion.section className="xenon-panel p-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-semibold">Python IDE</h2>
+            <h2 className="text-2xl font-semibold flex items-center gap-2 flex-wrap">
+              Python IDE
+              {userIsPro && <PlanBadge plan={profile?.plan} size="sm" />}
+            </h2>
             <p className="mt-2 text-sm text-[var(--muted)]">Write code on the left and see the result on the right.</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -339,8 +391,8 @@ export default function XenonIDE() {
               <Save className="h-4 w-4" />
               Save
             </button>
-            <button className="xenon-btn-subtle flex items-center gap-2" onClick={() => setShowProSkins(true)}>
-              <Layers className="h-4 w-4" /> Pro IDE Skins
+            <button className="xenon-btn-subtle flex items-center gap-2" onClick={openProSkins}>
+              <Layers className="h-4 w-4" /> Pro IDE Skins {!canUseProSkins && "(Pro)"}
             </button>
             <button className="xenon-btn-subtle flex items-center gap-2" onClick={() => setShowChallenge((v) => !v)}>
               <Sparkles className="h-4 w-4" />
@@ -516,7 +568,10 @@ export default function XenonIDE() {
                       {line.type === "in" ? `> ${line.text}` : line.text}
                     </p>
                     {isErr && line.raw && (
-                      <ErrorTranslatorButton rawError={line.raw} />
+                      <ErrorTranslatorButton
+                        rawError={line.raw}
+                        sourceCode={useAppStore.getState().activeProject?.code || ""}
+                      />
                     )}
                   </div>
                 );
@@ -673,11 +728,17 @@ export default function XenonIDE() {
             </div>
             
             <div className="p-6 bg-[var(--panel-soft)] border-t border-[var(--border)]">
-              <span className="text-[9px] font-black uppercase bg-sky-500/10 text-sky-400 border border-sky-400/25 px-1.5 py-0.5 rounded leading-none">
-                Pro Student Access Active
+              {canUseProSkins ? (
+              <span className="text-[9px] font-black uppercase bg-amber-500/10 text-amber-300 border border-amber-400/25 px-1.5 py-0.5 rounded leading-none">
+                Pro feature — unlocked
               </span>
+              ) : (
+              <span className="text-[9px] font-black uppercase bg-amber-500/10 text-amber-300 border border-amber-400/25 px-1.5 py-0.5 rounded leading-none">
+                Redeem PRO123 to unlock
+              </span>
+              )}
               <p className="text-[10px] leading-relaxed text-[var(--muted)] font-medium mt-2">
-                Custom layout skins and high-readability fonts are currently fully unlocked. Gated to Pro Student premium tier.
+                Pro-exclusive IDE themes and fonts. Not included on the free plan.
               </p>
             </div>
           </motion.div>

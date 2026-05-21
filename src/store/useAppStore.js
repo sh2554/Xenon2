@@ -4,10 +4,21 @@ import { generateClassCode } from "../lib/classCode";
 import { PRACTICE_QUESTIONS } from "../lib/practiceQuestions";
 import { getChallengeXpBreakdown, getLevelFromXp } from "../lib/progression";
 import { isMissingSupabaseTableError, translateSupabaseError } from "../lib/errorTranslator";
+import { REDEEM_CODES, normalizePlan, isProOrMax as checkProOrMax, isMax as checkMax, hasFeature as checkFeature, getProjectLimit } from "../lib/planFeatures";
+import { syncStreak, activateStreakFreeze, activateDoubleXp, loadStreakData, isDoubleXpActive } from "../lib/streak";
+import {
+  gradeTheoryMock,
+  gradeProgrammingMock,
+  saveMockResult,
+  loadMockResults,
+  buildHeatmapFromMockResults,
+} from "../lib/mockTests";
+import { getMockTestById } from "../lib/mockTestCatalog";
+import { enrichMockResult } from "../lib/mockTestGrades";
 
 const THEMES = ["xenon-dark", "oled-black", "classic-light", "solarized", "pink", "blue"];
-const PROFILE_SELECT_FIELDS = "id, full_name, first_name, username, role, has_seen_init, joined_app, created_at, avatar_url, headline, about_me, favorite_topic, profile_visibility, experience_points, level, questions_solved";
-const FRIEND_PROFILE_FIELDS = "id, full_name, first_name, username, role, avatar_url, headline, about_me, favorite_topic, profile_visibility, joined_app, experience_points, level";
+const PROFILE_SELECT_FIELDS = "id, full_name, first_name, username, role, has_seen_init, joined_app, created_at, avatar_url, headline, about_me, favorite_topic, profile_visibility, experience_points, plan, level, questions_solved";
+const FRIEND_PROFILE_FIELDS = "id, full_name, first_name, username, role, avatar_url, profile_theme, headline, about_me, favorite_topic, profile_visibility, joined_app, experience_points, level, plan";
 const FRIENDSHIP_SELECT = `id, status, created_at, responded_at, requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(${FRIEND_PROFILE_FIELDS}), addressee:profiles!friendships_addressee_id_fkey(${FRIEND_PROFILE_FIELDS})`;
 const FRIENDSHIP_SELECT_FALLBACK = "id, status, created_at, responded_at, requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(id, full_name, first_name, username, role, joined_app), addressee:profiles!friendships_addressee_id_fkey(id, full_name, first_name, username, role, joined_app)";
 const CHALLENGE_SELECT = `id, status, question_titles, challenger_id, opponent_id, challenger_score, opponent_score, challenger_answers, opponent_answers, challenger_completed_at, opponent_completed_at, challenger_xp_awarded, opponent_xp_awarded, winner_id, completed_at, created_at, updated_at, challenger:profiles!friend_challenges_challenger_id_fkey(${FRIEND_PROFILE_FIELDS}), opponent:profiles!friend_challenges_opponent_id_fkey(${FRIEND_PROFILE_FIELDS})`;
@@ -41,14 +52,33 @@ const normalizeProfileRecord = (profile = {}, fallback = {}) => ({
   has_seen_init: profile.has_seen_init ?? fallback.has_seen_init ?? false,
   joined_app: profile.joined_app || fallback.joined_app || new Date().toISOString(),
   created_at: profile.created_at || fallback.created_at || new Date().toISOString(),
-  avatar_url: profile.avatar_url || "",
-  profile_theme: profile.avatar_url || (typeof window !== "undefined" ? window.localStorage.getItem("xenon-pro-theme") : "default") || "default",
+  avatar_url:
+    profile.avatar_url && String(profile.avatar_url).startsWith("http")
+      ? profile.avatar_url
+      : "",
+  profile_theme:
+    (profile.profile_theme && ["default", "pink-glass", "oled", "cyberpunk"].includes(profile.profile_theme)
+      ? profile.profile_theme
+      : null) ||
+    (profile.avatar_url &&
+    !String(profile.avatar_url).startsWith("http") &&
+    ["default", "pink-glass", "oled", "cyberpunk"].includes(profile.avatar_url)
+      ? profile.avatar_url
+      : null) ||
+    "default",
   headline: profile.headline || "",
   about_me: profile.about_me || "",
   favorite_topic: profile.favorite_topic || "",
   profile_visibility: profile.profile_visibility ?? true,
   experience_points: Math.max(0, Number(profile.experience_points ?? fallback.experience_points ?? 0) || 0),
   level: Math.max(1, Number(profile.level ?? fallback.level ?? 1) || 1),
+  plan:
+    profile.plan ||
+    (typeof window !== "undefined" && profile.id
+      ? window.localStorage.getItem(`xenon-plan-${profile.id}`)
+      : null) ||
+    fallback.plan ||
+    "free",
   questions_solved: Math.max(0, Number(profile.questions_solved ?? fallback.questions_solved ?? 0) || 0),
 });
 
@@ -243,7 +273,17 @@ export const useAppStore = create((set, get) => ({
   outgoingFriendRequests: [],
   friendChallenges: [],
   databaseWarnings: {},
-  streak: { current: 0, longest: 0 },
+  streak: { current: 0, longest: 0, doubleXpActive: false, freezeArmed: false, atRisk: false, todayActive: false },
+  myMockResults: [],
+  myHeatmapTopics: [],
+  classMockResultsByStudent: {},
+  showUpgradePrompt: false,
+  setShowUpgradePrompt: (value) => set({ showUpgradePrompt: value }),
+  getPlan: () => normalizePlan(get().profile?.plan),
+  isProOrMax: () => checkProOrMax(get().profile?.plan),
+  isProOnly: () => normalizePlan(get().profile?.plan) === "pro",
+  isMax: () => checkMax(get().profile?.plan),
+  hasFeature: (featureKey) => checkFeature(get().profile?.plan, featureKey),
   resetSessionState: () =>
     set({
       user: null,
@@ -266,7 +306,10 @@ export const useAppStore = create((set, get) => ({
       outgoingFriendRequests: [],
       friendChallenges: [],
       databaseWarnings: {},
-      streak: { current: 0, longest: 0 },
+      streak: { current: 0, longest: 0, doubleXpActive: false, freezeArmed: false, atRisk: false, todayActive: false },
+  myMockResults: [],
+  myHeatmapTopics: [],
+  classMockResultsByStudent: {},
     }),
 
   setDatabaseWarning: (featureKey, message) =>
@@ -288,7 +331,14 @@ export const useAppStore = create((set, get) => ({
     set((state) => ({ activeProject: { ...state.activeProject, title } })),
   setActiveProjectCode: (code) =>
     set((state) => ({ activeProject: { ...state.activeProject, code } })),
-  newProject: () => set({ activeProjectId: null, activeProject: { title: "Untitled.py", code: "" }, consoleLines: [] }),
+  newProject: () => {
+  const { profile, projects } = get();
+  const limit = getProjectLimit(profile?.plan);
+  if (limit != null && (projects?.length ?? 0) >= limit) {
+    throw new Error(`Free plan allows up to ${limit} saved projects. Redeem a Pro or Max code in Account Settings to unlock unlimited projects.`);
+  }
+  set({ activeProjectId: null, activeProject: { title: "Untitled.py", code: "" }, consoleLines: [] });
+},
   openProject: (project) =>
     set({
       activeProjectId: project.id,
@@ -306,7 +356,9 @@ export const useAppStore = create((set, get) => ({
     await get().ensureProfileExists(sessionUser);
     const profile = await get().loadProfile(sessionUser);
     await get().loadProjects(sessionUser.id);
-    get().initStreak();
+    get().refreshStreak();
+    get().recordStreakActivity();
+    if (profile?.role === "student") get().loadMyMockTests();
 
     if (profile?.role === "teacher") {
       await get().loadTeacherClasses(sessionUser.id);
@@ -466,7 +518,12 @@ export const useAppStore = create((set, get) => ({
     let error;
     ({ data, error } = await supabase.from("profiles").select(PROFILE_SELECT_FIELDS).eq("id", user.id).maybeSingle());
     if (error && String(error.message || "").toLowerCase().includes("column")) {
-      ({ data, error } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle());
+      const fallbackFields = PROFILE_SELECT_FIELDS.replace(/,?\s*plan\s*,?/i, ",").replace(/,,/g, ",").replace(/^,|,$/g, "");
+      ({ data, error } = await supabase
+        .from("profiles")
+        .select(fallbackFields || "*")
+        .eq("id", user.id)
+        .maybeSingle());
     }
     if (error) {
       const md = user.user_metadata || {};
@@ -771,8 +828,13 @@ export const useAppStore = create((set, get) => ({
 
   awardExperience: async (amount) => {
     const { user, profile } = get();
-    const xpGain = Math.max(0, Number(amount) || 0);
+    let xpGain = Math.max(0, Number(amount) || 0);
     if (!user || !profile || !xpGain) return { xp: profile?.experience_points || 0, level: profile?.level || 1 };
+
+    const streakData = loadStreakData(user.id);
+    const mult = isDoubleXpActive(streakData) ? 2 : 1;
+    if (mult > 1) xpGain = Math.floor(xpGain * mult);
+    get().recordStreakActivity();
 
     const nextXp = Math.max(0, (profile.experience_points || 0) + xpGain);
     const nextLevel = getLevelFromXp(nextXp);
@@ -995,9 +1057,13 @@ export const useAppStore = create((set, get) => ({
   },
 
   saveProject: async () => {
-    const { user, activeProject, activeProjectId, profile, enrolledClass } = get();
+    const { user, activeProject, activeProjectId, profile, enrolledClass, projects } = get();
     if (!user) return;
     const isNewProject = !activeProjectId;
+    const limit = getProjectLimit(profile?.plan);
+    if (isNewProject && limit != null && (projects?.length ?? 0) >= limit) {
+      throw new Error(`Free plan allows up to ${limit} saved projects. Redeem a Pro or Max code in Account Settings.`);
+    }
     const safeTitle = (activeProject.title || "").trim() || `Untitled-${new Date().toLocaleString()}`;
     const payload = {
       owner_id: user.id,
@@ -1336,6 +1402,7 @@ export const useAppStore = create((set, get) => ({
       );
       applyLocalStateUpdate(nextCorrect);
       await syncProfileStats(nextCorrect).catch(() => {});
+      get().recordStreakActivity();
       get().checkAndGrantAchievements().catch(() => {});
       return { status: "counted_local", totalCorrect: nextCorrect };
     }
@@ -1353,6 +1420,7 @@ export const useAppStore = create((set, get) => ({
       const localCorrect = setLocalPracticeCorrect(enrolledClass.id, user.id, nextCorrect);
       applyLocalStateUpdate(localCorrect);
       await syncProfileStats(localCorrect).catch(() => {});
+      get().recordStreakActivity();
       get().checkAndGrantAchievements().catch(() => {});
       return { status: "counted_local", totalCorrect: localCorrect };
     }
@@ -1362,6 +1430,7 @@ export const useAppStore = create((set, get) => ({
     applyLocalStateUpdate(nextCorrect);
     await syncProfileStats(nextCorrect).catch(() => {});
     await get().loadStudentClass({ sessionUser: user, profile });
+    get().recordStreakActivity();
     get().checkAndGrantAchievements().catch(() => {});
     return { status: "counted", totalCorrect: nextCorrect };
   },
@@ -1382,6 +1451,37 @@ export const useAppStore = create((set, get) => ({
     }
   },
 
+  redeemPlanCode: async (code) => {
+    const newPlan = REDEEM_CODES[code.trim().toUpperCase()];
+    if (!newPlan) throw new Error("Invalid redemption code.");
+    const { user } = get();
+    if (!user) throw new Error("Not authenticated.");
+
+    if (typeof window !== "undefined") {
+      if (newPlan === "free") {
+        window.localStorage.removeItem(`xenon-plan-${user.id}`);
+      } else {
+        window.localStorage.setItem(`xenon-plan-${user.id}`, newPlan);
+      }
+    }
+
+    const { error } = await supabase.from("profiles").update({ plan: newPlan }).eq("id", user.id);
+    if (error) {
+      const msg = String(error.message || "").toLowerCase();
+      const missingColumn =
+        msg.includes("plan") ||
+        msg.includes("column") ||
+        msg.includes("schema cache");
+      if (!missingColumn) {
+        throw new Error(error.message || "Failed to update plan.");
+      }
+    }
+
+    set((state) => ({
+      profile: state.profile ? { ...state.profile, plan: newPlan } : null,
+    }));
+  },
+
   leaveCurrentClass: async () => {
     const { user, enrolledClass } = get();
     if (!user || !enrolledClass) return;
@@ -1394,25 +1494,131 @@ export const useAppStore = create((set, get) => ({
     set({ enrolledClass: null });
   },
 
-  initStreak: () => {
+  refreshStreak: () => {
+    const { user } = get();
+    if (!user?.id) return;
     try {
-      const STREAK_KEY = 'xenon-streak';
-      const today = new Date().toISOString().slice(0, 10);
-      let stored = {};
-      try { stored = JSON.parse(localStorage.getItem(STREAK_KEY) || '{}'); } catch {}
-      let current = stored.current || 0;
-      let longest = stored.longest || 0;
-      const lastDate = stored.lastDate || null;
-      if (!lastDate || lastDate === today) {
-        current = Math.max(current, 1);
-      } else {
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-        current = lastDate === yesterday ? current + 1 : 1;
-      }
-      longest = Math.max(longest, current);
-      localStorage.setItem(STREAK_KEY, JSON.stringify({ current, longest, lastDate: today }));
-      set({ streak: { current, longest } });
+      const view = syncStreak(user.id, { markActivity: false });
+      set({ streak: view });
     } catch {}
+  },
+
+  recordStreakActivity: () => {
+    const { user, profile } = get();
+    if (!user?.id || profile?.role !== "student") return;
+    try {
+      const view = syncStreak(user.id, { markActivity: true });
+      set({ streak: view });
+      get().checkAndGrantAchievements().catch(() => {});
+    } catch {}
+  },
+
+  activateStreakFreezeBooster: () => {
+    const { user } = get();
+    if (!user?.id) return { ok: false, error: "Sign in to use boosters." };
+    const result = activateStreakFreeze(user.id);
+    if (result.ok && result.streak) set({ streak: result.streak });
+    return result;
+  },
+
+  activateDoubleXpBooster: () => {
+    const { user } = get();
+    if (!user?.id) return { ok: false, error: "Sign in to use boosters." };
+    const result = activateDoubleXp(user.id);
+    if (result.ok && result.streak) set({ streak: result.streak });
+    return result;
+  },
+
+  loadMyMockTests: () => {
+    const { user } = get();
+    if (!user?.id) {
+      set({ myMockResults: [], myHeatmapTopics: [] });
+      return [];
+    }
+    const results = loadMockResults(user.id);
+    set({
+      myMockResults: results,
+      myHeatmapTopics: buildHeatmapFromMockResults(results),
+    });
+    return results;
+  },
+
+  submitMockTest: async ({ testId, answers }) => {
+    const { user, enrolledClass, profile } = get();
+    if (!user?.id || profile?.role !== "student") {
+      throw new Error("Students only.");
+    }
+    if (!checkFeature(profile?.plan, "mockTests")) {
+      throw new Error("Mock tests require the Max plan (redeem MAX456 in Settings).");
+    }
+    const test = getMockTestById(testId);
+    if (!test) throw new Error("Mock test not found.");
+
+    const graded =
+      test.type === "theory"
+        ? gradeTheoryMock(test.questions, answers)
+        : gradeProgrammingMock(test.questions, answers);
+
+    const enriched = enrichMockResult(graded, {
+      testId: test.id,
+      testTitle: test.title,
+      testType: test.type,
+    });
+
+    saveMockResult(user.id, enriched);
+
+    try {
+      await supabase.from("mock_test_results").insert({
+        student_id: user.id,
+        class_id: enrolledClass?.id || null,
+        test_id: test.id,
+        test_type: test.type,
+        topic_scores: enriched.topicScores,
+        total_correct: enriched.totalCorrect,
+        total_questions: enriched.totalQuestions,
+        percent: enriched.percent,
+        grade: enriched.grade,
+      });
+    } catch {
+      /* localStorage fallback when table missing */
+    }
+
+    get().loadMyMockTests();
+    return enriched;
+  },
+
+  loadClassMockHeatmaps: async (classId) => {
+    if (!classId) {
+      set({ classMockResultsByStudent: {} });
+      return {};
+    }
+    try {
+      const { data, error } = await supabase
+        .from("mock_test_results")
+        .select("student_id, test_id, test_type, topic_scores, total_correct, total_questions, percent, grade, completed_at")
+        .eq("class_id", classId)
+        .order("completed_at", { ascending: true });
+      if (error) throw error;
+      const byStudent = {};
+      (data || []).forEach((row) => {
+        if (!byStudent[row.student_id]) byStudent[row.student_id] = [];
+        byStudent[row.student_id].push({
+          testId: row.test_id,
+          type: row.test_type,
+          topicScores: row.topic_scores,
+          totalCorrect: row.total_correct,
+          totalQuestions: row.total_questions,
+          percent: row.percent,
+          grade: row.grade,
+          completedAt: row.completed_at,
+        });
+      });
+      set({ classMockResultsByStudent: byStudent });
+      return byStudent;
+    } catch {
+      set({ classMockResultsByStudent: {} });
+      return {};
+    }
   },
 
   loadAchievements: async () => {
@@ -1553,17 +1759,24 @@ export const useAppStore = create((set, get) => ({
     } catch { set({ assignments: [] }); }
   },
 
-  postAssignment: async ({ classId, title, description, dueDate, questionGoal }) => {
+  postAssignment: async ({ classId, title, description, dueDate, questionGoal, assignmentType, contentJson }) => {
     const { user } = get();
     const parsedGoal = Number(questionGoal);
-    const { error } = await supabase.from('class_assignments').insert({
+    const payload = {
       class_id: classId,
       teacher_id: user.id,
       title: title.trim(),
       description: description.trim(),
       due_date: dueDate || null,
       question_goal: Number.isFinite(parsedGoal) && parsedGoal > 0 ? Math.floor(parsedGoal) : null,
-    });
+      assignment_type: assignmentType || "legacy",
+      content_json: contentJson || {},
+    };
+    let { error } = await supabase.from("class_assignments").insert(payload);
+    if (error && String(error.message || "").toLowerCase().includes("column")) {
+      const { assignment_type, content_json, ...fallback } = payload;
+      ({ error } = await supabase.from("class_assignments").insert(fallback));
+    }
     if (error) throw new Error(translateSupabaseError(error, "Could not post assignment."));
     get().setDatabaseWarning("assignments", "");
   },
@@ -1573,9 +1786,29 @@ export const useAppStore = create((set, get) => ({
     if (error) throw new Error(translateSupabaseError(error, "Could not delete assignment."));
   },
 
-  submitAssignment: async ({ assignmentId, notes }) => {
+  submitAssignment: async ({ assignmentId, notes, submitted_code, answers_json, score, maxScore }) => {
     const { user, enrolledClass } = get();
-    const { error } = await supabase.from('assignment_submissions').upsert({ assignment_id: assignmentId, class_id: enrolledClass?.id, student_id: user.id, notes: notes || '', submitted_at: new Date().toISOString() }, { onConflict: 'assignment_id,student_id' });
+    const row = {
+      assignment_id: assignmentId,
+      class_id: enrolledClass?.id,
+      student_id: user.id,
+      notes: notes || "",
+      submitted_code: submitted_code || "",
+      submitted_at: new Date().toISOString(),
+    };
+    if (answers_json != null) row.answers_json = answers_json;
+    if (score != null) row.score = score;
+    if (maxScore != null) row.max_score = maxScore;
+
+    let { error } = await supabase.from("assignment_submissions").upsert(row, {
+      onConflict: "assignment_id,student_id",
+    });
+    if (error && String(error.message || "").toLowerCase().includes("column")) {
+      const { answers_json: _a, submitted_code: _c, score: _s, max_score: _m, ...fallback } = row;
+      ({ error } = await supabase.from("assignment_submissions").upsert(fallback, {
+        onConflict: "assignment_id,student_id",
+      }));
+    }
     if (error) throw new Error(translateSupabaseError(error, "Could not submit assignment."));
   },
 
@@ -1595,16 +1828,18 @@ export const useAppStore = create((set, get) => ({
 
   setProfileTheme: async (themeId) => {
     const { user } = get();
+    const safe = ["default", "pink-glass", "oled", "cyberpunk"].includes(themeId) ? themeId : "default";
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("xenon-pro-theme", themeId);
+      window.localStorage.setItem("xenon-pro-theme", safe);
     }
     set((state) => ({
-      profile: state.profile ? { ...state.profile, profile_theme: themeId } : null
+      profile: state.profile ? { ...state.profile, profile_theme: safe } : null,
     }));
     if (user) {
-      try {
-        await supabase.from("profiles").update({ avatar_url: themeId }).eq("id", user.id);
-      } catch {}
+      let { error } = await supabase.from("profiles").update({ profile_theme: safe }).eq("id", user.id);
+      if (error && String(error.message || "").toLowerCase().includes("column")) {
+        await supabase.from("profiles").update({ avatar_url: safe }).eq("id", user.id);
+      }
     }
   },
 
@@ -1616,7 +1851,7 @@ export const useAppStore = create((set, get) => ({
     try {
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, first_name, level, experience_points, avatar_url, role, questions_solved')
+        .select('id, username, first_name, level, experience_points, avatar_url, profile_theme, role, questions_solved, plan, headline, about_me, favorite_topic')
         .eq('role', 'student')
         .order('experience_points', { ascending: false })
         .limit(100);
@@ -1639,8 +1874,11 @@ export const useAppStore = create((set, get) => ({
           first_name: p.first_name || p.username || "Student",
           level: p.level || 1,
           experience_points: p.experience_points || 0,
-          plan: (p.experience_points || 0) > 2500 ? "premium" : "free",
-          profile_theme: p.avatar_url || "default",
+          plan: normalizePlan(p.plan),
+          profile_theme:
+            p.profile_theme ||
+            (p.avatar_url && !String(p.avatar_url).startsWith("http") ? p.avatar_url : "default"),
+          avatar_url: p.avatar_url?.startsWith?.("http") ? p.avatar_url : "",
           total_time_seconds: 0,
           total_projects: 0,
           practice_questions_correct: 0,
@@ -1675,11 +1913,16 @@ export const useAppStore = create((set, get) => ({
           first_name: p.first_name || p.username || "Student",
           level: p.level || 1,
           experience_points: p.experience_points || 0,
-          plan: (p.experience_points || 0) > 2500 ? "premium" : "free",
-          profile_theme: p.avatar_url || "default",
+          plan: normalizePlan(p.plan),
+          profile_theme:
+            p.profile_theme ||
+            (p.avatar_url && !String(p.avatar_url).startsWith("http") ? p.avatar_url : "default"),
+          avatar_url: p.avatar_url?.startsWith?.("http") ? p.avatar_url : "",
+          headline: p.headline || "",
+          about_me: p.about_me || "",
+          favorite_topic: p.favorite_topic || "",
           total_time_seconds: stats.total_time_seconds,
           total_projects: stats.total_projects,
-          // Read directly from profiles.questions_solved — written by markPracticeSkillCorrect
           practice_questions_correct: p.questions_solved || 0,
         };
       });
