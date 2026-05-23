@@ -82,8 +82,8 @@ function SettingsSidebar({
         redeemMessage={redeemMessage}
         onRedeem={async () => {
           try {
-            await redeemPlanCode(redeemCode);
-            setRedeemMessage("Plan upgraded!");
+            const msg = await redeemPlanCode(redeemCode);
+            setRedeemMessage(msg || "Plan upgraded!");
             setRedeemCode("");
           } catch (err) {
             setRedeemMessage(err.message || "Failed to redeem.");
@@ -641,8 +641,8 @@ export default function SettingsPanel() {
                     redeemMessage={redeemMessage}
                     onRedeem={async () => {
                       try {
-                        await redeemPlanCode(redeemCode);
-                        setRedeemMessage("Plan upgraded!");
+                        const msg = await redeemPlanCode(redeemCode);
+                        setRedeemMessage(msg || "Plan upgraded!");
                         setRedeemCode("");
                       } catch (err) {
                         setRedeemMessage(err.message || "Invalid access code.");

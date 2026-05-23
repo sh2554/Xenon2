@@ -6,7 +6,7 @@ import { translatePythonError } from "../lib/errorTranslator";
 import { useAppStore } from "../store/useAppStore";
 import PlanBadge from "./PlanBadge";
 import { isProOrMax, isMax, hasFeature, normalizePlan } from "../lib/planFeatures";
-import { Play, Save, FilePlus, Sparkles, Database, X, BookOpen, AlertCircle, Terminal, History, ArrowRight, FileText, Layers } from "lucide-react";
+import { Play, Save, FilePlus, Sparkles, Database, X, BookOpen, AlertCircle, Terminal, History, ArrowRight, FileText, Layers, Share2, Link } from "lucide-react";
 import { GCSE_QUESTIONS } from "../lib/gcseQuestions";
 
 const buildMonacoTheme = (monaco) => {
@@ -153,6 +153,8 @@ export default function XenonIDE() {
   const queuePracticeTime = useAppStore((s) => s.queuePracticeTime);
   const flushPracticeTime = useAppStore((s) => s.flushPracticeTime);
 
+  const shareSnippet = useAppStore((s) => s.shareSnippet);
+  const [shareStatus, setShareStatus] = useState("");
   const [showProSkins, setShowProSkins] = useState(false);
   const setProfileTheme = useAppStore((s) => s.setProfileTheme);
   const proTheme = profile?.profile_theme || "default";
@@ -285,7 +287,7 @@ export default function XenonIDE() {
       worker.addEventListener("message", handleMessage);
       await workerReadyPromise;
       setConsoleLines([{ type: "sys", text: "Running..." }]);
-      worker.postMessage({ type: "run", code: useAppStore.getState().activeProject.code });
+      worker.postMessage({ type: "run", code: useAppStore.getState().activeProject.code, canUseTime });
     } catch (error) {
       setIsRunning(false);
       appendConsoleLine({ type: "err", text: "Worker Error: " + String(error) });
@@ -346,6 +348,7 @@ export default function XenonIDE() {
   const userIsPro = isProOrMax(profile?.plan);
   const userIsMax = isMax(profile?.plan);
   const canUseProSkins = hasFeature(profile?.plan, "premiumIdeSkins");
+  const canUseTime = hasFeature(profile?.plan, "timeModule");
 
   const openProSkins = () => {
     if (!canUseProSkins) {
@@ -391,6 +394,30 @@ export default function XenonIDE() {
               <Save className="h-4 w-4" />
               Save
             </button>
+            <button
+              className="xenon-btn-ghost flex items-center gap-2"
+              onClick={async () => {
+                const code = useAppStore.getState().activeProject?.code || "";
+                if (!code.trim()) { setShareStatus("No code to share"); return; }
+                setShareStatus("Sharing...");
+                try {
+                  const slug = await shareSnippet(code);
+                  const url = `${window.location.origin}/share/${slug}`;
+                  try {
+                    await navigator.clipboard.writeText(url);
+                    setShareStatus("Link copied!");
+                  } catch {
+                    setShareStatus(`Share link: ${url}`);
+                  }
+                } catch {
+                  setShareStatus("Failed to share");
+                }
+                setTimeout(() => setShareStatus(""), 6000);
+              }}
+            >
+              <Share2 className="h-4 w-4" />
+              Share
+            </button>
             <button className="xenon-btn-subtle flex items-center gap-2" onClick={openProSkins}>
               <Layers className="h-4 w-4" /> Pro IDE Skins {!canUseProSkins && "(Pro)"}
             </button>
@@ -407,11 +434,27 @@ export default function XenonIDE() {
             onChange={(e) => setActiveProjectTitle(e.target.value)}
             placeholder="Untitled.py"
           />
-          <span className="xenon-badge">Standard Python imports like `random` are available here</span>
+          <span className="xenon-badge">Standard Python imports like `random` are available here{canUseTime ? ' · `time` module ✓' : ''}</span>
+          {!canUseTime && (
+            <span className="xenon-badge text-[var(--accent)] bg-[var(--accent-soft)]">`time` module on Pro+</span>
+          )}
           {profile?.role === "student" && enrolledClass?.id && (
             <span className="xenon-badge">Practice time is tracked while this page is active</span>
           )}
           {saveStatus && <span className="text-sm text-[var(--muted)]">{saveStatus}</span>}
+          {shareStatus && (
+            <span
+              className={`text-sm flex items-center gap-1 ${shareStatus.startsWith("Share link:") ? "cursor-pointer select-all" : ""} text-[var(--accent)]`}
+              title={shareStatus.startsWith("Share link:") ? "Click to select, then copy" : undefined}
+            >
+              <Link className={`h-3 w-3 ${shareStatus.startsWith("Share link:") ? "text-green-400" : ""} shrink-0`} />
+              {shareStatus.startsWith("Share link:") ? (
+                <span className="break-all">{shareStatus}</span>
+              ) : (
+                shareStatus
+              )}
+            </span>
+          )}
         </div>
       </motion.section>
 

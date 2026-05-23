@@ -500,17 +500,17 @@ export default function LeaderboardsPanel({ onOpenSettings }) {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="xenon-panel p-6 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+        <div>
             <h2 className="text-2xl font-black flex items-center gap-2">
               <Trophy className="h-7 w-7 text-amber-400" />
               Leaderboards
-            </h2>
+          </h2>
             <p className="text-sm text-[var(--muted)] mt-1 max-w-xl">
               <strong className="text-[var(--fg)]">Class</strong> ranks by questions solved and projects.{" "}
               <strong className="text-[var(--fg)]">Global</strong> ranks by total XP. Open a profile to see their
               theme and stats.
-            </p>
-          </div>
+          </p>
+        </div>
           <div className="flex flex-wrap gap-2">
             {onOpenSettings && (
               <button
@@ -523,24 +523,24 @@ export default function LeaderboardsPanel({ onOpenSettings }) {
               </button>
             )}
             <div className="flex gap-1 bg-[var(--panel-soft)] p-1 rounded-xl border border-[var(--border)]">
-              <button
+          <button
                 type="button"
-                onClick={() => setActiveTab("class")}
+            onClick={() => setActiveTab("class")}
                 className={`px-4 py-2 text-xs font-black rounded-lg flex items-center gap-1.5 transition ${
                   activeTab === "class" ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--muted)]"
                 }`}
               >
                 <Users className="h-4 w-4" /> Class
-              </button>
-              <button
+          </button>
+          <button
                 type="button"
-                onClick={() => setActiveTab("global")}
+            onClick={() => setActiveTab("global")}
                 className={`px-4 py-2 text-xs font-black rounded-lg flex items-center gap-1.5 transition ${
                   activeTab === "global" ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--muted)]"
                 }`}
               >
                 <Globe className="h-4 w-4" /> Global
-              </button>
+          </button>
             </div>
           </div>
         </div>
@@ -604,7 +604,7 @@ export default function LeaderboardsPanel({ onOpenSettings }) {
           ) : (
             <span className="xenon-badge flex items-center gap-1">
               <Star className="h-3 w-3" /> Ranked by XP
-            </span>
+          </span>
           )}
 
           <span className="xenon-badge tabular-nums">{displayEntries.length} students</span>
@@ -642,7 +642,7 @@ export default function LeaderboardsPanel({ onOpenSettings }) {
                   onViewProfile={openPublicProfile}
                 />
               ))}
-            </div>
+                          </div>
           </>
         )}
       </div>
@@ -659,13 +659,13 @@ export default function LeaderboardsPanel({ onOpenSettings }) {
           </motion.div>
         )}
         {selectedProfile && !profileLoading && (
-          <PublicProfileModal
+        <PublicProfileModal 
             key={`${selectedProfile.id}-${selectedProfile.profile_theme}`}
-            profile={selectedProfile}
+          profile={selectedProfile} 
             viewMode={profileViewMode}
-            onClose={() => setSelectedProfile(null)}
-          />
-        )}
+          onClose={() => setSelectedProfile(null)} 
+        />
+      )}
       </AnimatePresence>
     </motion.div>
   );

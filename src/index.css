@@ -696,6 +696,7 @@ main {
 .xenon-scroll {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
+  transition: scrollbar-color 200ms ease;
 }
 
 .xenon-scroll::-webkit-scrollbar {
@@ -703,9 +704,57 @@ main {
   height: 8px;
 }
 
+.xenon-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+  margin: 2px;
+}
+
 .xenon-scroll::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 999px;
+  border: 1.5px solid transparent;
+  background-clip: content-box;
+  min-height: 32px;
+  transition: background 200ms ease, border-color 200ms ease;
+}
+
+.xenon-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+  border: 1.5px solid transparent;
+  background-clip: content-box;
+}
+
+.xenon-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Global scrollbar styling for themed consistency */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  background-clip: content-box;
+  min-height: 28px;
+  transition: background 200ms ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 
 .xenon-kicker {

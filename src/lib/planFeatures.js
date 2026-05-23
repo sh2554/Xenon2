@@ -4,6 +4,7 @@ export const REDEEM_CODES = {
   PRO123: "pro",
   MAX456: "max",
   FREE: "free",
+  RESETMOCK: "resetmock",
 };
 
 export const PLANS = {
@@ -78,6 +79,7 @@ export const FEATURES = {
   premiumIdeSkins: ["pro", "max"],
   proMemberBadge: ["pro", "max"],
   aiErrorExplain: ["pro", "max"],
+  timeModule: ["pro", "max"],
   mockTests: ["max"],
   specHeatmapPerStudent: ["max"],
   viewOwnSpecHeatmap: ["max"],

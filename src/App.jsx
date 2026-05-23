@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
 import AuthGate from "./components/AuthGate";
+import SharedCodeView from "./components/SharedCodeView";
+import NotFoundPage from "./components/NotFoundPage";
 import InitOverlay from "./components/InitOverlay";
 import ProfileSetupModal from "./components/ProfileSetupModal";
 import XenonIDE from "./components/XenonIDE";
@@ -520,26 +523,12 @@ function AchievementsView() {
 }
 export default function App() {
   const user = useAppStore((s) => s.user);
-  const profile = useAppStore((s) => s.profile);
   const authHydrated = useAppStore((s) => s.authHydrated);
-  const enrolledClass = useAppStore((s) => s.enrolledClass);
-  const projects = useAppStore((s) => s.projects);
-  const friendChallenges = useAppStore((s) => s.friendChallenges);
-  const showInitOverlay = useAppStore((s) => s.showInitOverlay);
-  const showProfileSetup = useAppStore((s) => s.showProfileSetup);
   const bootstrap = useAppStore((s) => s.bootstrap);
-  const recoverAuthState = useAppStore((s) => s.recoverAuthState);
-  const loadTeacherClasses = useAppStore((s) => s.loadTeacherClasses);
-  const loadStudentClass = useAppStore((s) => s.loadStudentClass);
   const initAuthListener = useAppStore((s) => s.initAuthListener);
   const cleanupAuthListener = useAppStore((s) => s.cleanupAuthListener);
-  const signOut = useAppStore((s) => s.signOut);
-  const streak = useAppStore((s) => s.streak);
-  const databaseWarnings = useAppStore((s) => s.databaseWarnings);
-  const showUpgradePrompt = useAppStore((s) => s.showUpgradePrompt);
-  const setShowUpgradePrompt = useAppStore((s) => s.setShowUpgradePrompt);
-  const [tab, setTab] = useState("home");
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const recoverAuthState = useAppStore((s) => s.recoverAuthState);
+  const isSharePage = window.location.pathname.startsWith("/share/");
 
   useEffect(() => {
     bootstrap();
@@ -554,6 +543,32 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [recoverAuthState]);
 
+  if (!isSharePage && !authHydrated) return <LoadingScreen />;
+  if (!isSharePage && !user) return <AuthGate initialMode="landing" />;
+
+  return (
+    <Routes>
+      <Route path="/share/:slug" element={<SharedCodeView />} />
+      <Route path="/" element={<DashboardShell />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
+}
+
+function DashboardShell() {
+  const profile = useAppStore((s) => s.profile);
+  const enrolledClass = useAppStore((s) => s.enrolledClass);
+  const projects = useAppStore((s) => s.projects);
+  const friendChallenges = useAppStore((s) => s.friendChallenges);
+  const showInitOverlay = useAppStore((s) => s.showInitOverlay);
+  const showProfileSetup = useAppStore((s) => s.showProfileSetup);
+  const loadTeacherClasses = useAppStore((s) => s.loadTeacherClasses);
+  const loadStudentClass = useAppStore((s) => s.loadStudentClass);
+  const signOut = useAppStore((s) => s.signOut);
+  const streak = useAppStore((s) => s.streak);
+  const databaseWarnings = useAppStore((s) => s.databaseWarnings);
+  const showUpgradePrompt = useAppStore((s) => s.showUpgradePrompt);
+  const setShowUpgradePrompt = useAppStore((s) => s.setShowUpgradePrompt);
   const refreshStreak = useAppStore((s) => s.refreshStreak);
 
   useEffect(() => {
@@ -562,13 +577,20 @@ export default function App() {
   }, [profile?.role, loadTeacherClasses, loadStudentClass]);
 
   useEffect(() => {
+    const user = useAppStore.getState().user;
     if (!user || profile?.role !== "student") return;
     const onVisible = () => {
       if (document.visibilityState === "visible") refreshStreak();
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [user, profile?.role, refreshStreak]);
+  }, [profile?.role, refreshStreak]);
+
+  const [tab, setTab] = useState(() => {
+    const hash = window.location.hash.replace("#", "");
+    return hash || "home";
+  });
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
     { id: "home", label: "Dashboard", icon: LayoutDashboard },
@@ -584,9 +606,6 @@ export default function App() {
     { id: "class", label: profile?.role === "teacher" ? "Class Manager" : "My Class", icon: Home },
     { id: "settings", label: "Settings", icon: Settings },
   ];
-
-  if (!authHydrated) return <LoadingScreen />;
-  if (!user) return <AuthGate initialMode="landing" />;
 
   const currentNav = navItems.find(n => n.id === tab);
   const levelProgress = getLevelProgress(profile?.experience_points || 0);

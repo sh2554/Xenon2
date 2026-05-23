@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { THEORY_UNITS } from "../lib/theoryContent";
 import { useAppStore } from "../store/useAppStore";
@@ -24,7 +24,9 @@ import {
   PenLine,
   GraduationCap,
   Sparkles,
-  Target
+  Target,
+  ChevronRight,
+  Play
 } from "lucide-react";
 
 // ─── Flashcard component ───────────────────────────────────────────────────────
@@ -534,22 +536,79 @@ function KeyTerms({ unit }) {
   );
 }
 
+// ─── Theory progress helpers ────────────────────────────────────────────────────
+
+function loadProgress() {
+  try {
+    return JSON.parse(localStorage.getItem("xenon-theory-progress") || "{}");
+  } catch { return {}; }
+}
+
+function saveProgress(progress) {
+  try {
+    localStorage.setItem("xenon-theory-progress", JSON.stringify(progress));
+  } catch { /* ignore */ }
+}
+
+function useTheoryProgress(unitId) {
+  const [progress, setProgress] = useState(() => loadProgress());
+
+  const updateProgress = useCallback((updates) => {
+    setProgress((prev) => {
+      const next = { ...prev, ...updates };
+      saveProgress(next);
+      return next;
+    });
+  }, []);
+
+  const unitProg = unitId ? progress[unitId] || { completedSections: [], lastSection: null } : { completedSections: [], lastSection: null };
+
+  const toggleSectionComplete = useCallback((sectionHeading) => {
+    setProgress((prev) => {
+      const unitPrev = prev[unitId] || { completedSections: [], lastSection: null };
+      const list = unitPrev.completedSections || [];
+      const nextList = list.includes(sectionHeading)
+        ? list.filter((s) => s !== sectionHeading)
+        : [...list, sectionHeading];
+      const next = { ...prev, [unitId]: { ...unitPrev, completedSections: nextList, lastSection: sectionHeading } };
+      saveProgress(next);
+      return next;
+    });
+  }, [unitId]);
+
+  const setLastSection = useCallback((heading) => {
+    setProgress((prev) => {
+      const unitPrev = prev[unitId] || { completedSections: [], lastSection: null };
+      const next = { ...prev, [unitId]: { ...unitPrev, lastSection: heading } };
+      saveProgress(next);
+      return next;
+    });
+  }, [unitId]);
+
+  return { progress, unitProg, toggleSectionComplete, setLastSection, updateProgress };
+}
+
 // ─── Topic detail view ─────────────────────────────────────────────────────────
 
 function TopicDetail({ unit, onBack }) {
   const profilePlan = useAppStore((s) => s.profile?.plan);
   const canViewProNotes = hasFeature(profilePlan, "extendedTheoryNotes");
+  const { unitProg, toggleSectionComplete, setLastSection } = useTheoryProgress(unit.id);
   const [tab, setTab] = useState("notes");
   const [inFlashcards, setInFlashcards] = useState(false);
   const [inQuiz, setInQuiz] = useState(false);
   const [shuffleEnabled, setShuffleEnabled] = useState(true);
-  const [expandedSections, setExpandedSections] = useState({});
+  const [expandedSections, setExpandedSections] = useState(() => {
+    if (unitProg.lastSection) return { [unitProg.lastSection]: true };
+    return {};
+  });
 
   const toggleSection = (heading) => {
     setExpandedSections((prev) => ({
       ...prev,
       [heading]: !prev[heading]
     }));
+    setLastSection(heading);
   };
 
   const expandAll = () => {
@@ -563,6 +622,9 @@ function TopicDetail({ unit, onBack }) {
   const collapseAll = () => {
     setExpandedSections({});
   };
+
+  const completedCount = unitProg.completedSections?.length || 0;
+  const totalSections = unit.notes.length;
 
   return (
     <motion.div className="space-y-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -578,6 +640,17 @@ function TopicDetail({ unit, onBack }) {
           <div>
             <p className="xenon-kicker" style={{ color: unit.accent }}>{unit.unit}</p>
             <h2 className="mt-1 text-2xl font-bold">{unit.title}</h2>
+            {totalSections > 0 && (
+              <div className="flex items-center gap-2 mt-2">
+                <div className="h-1.5 flex-1 max-w-[200px] rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.round((completedCount / totalSections) * 100)}%`, background: unit.accent }}
+                  />
+                </div>
+                <span className="text-[10px] font-bold text-[var(--muted)]">{completedCount}/{totalSections}</span>
+              </div>
+            )}
           </div>
           <StudyProgress unit={unit} />
         </div>
@@ -629,10 +702,29 @@ function TopicDetail({ unit, onBack }) {
                 className="w-full p-6 text-left flex items-center justify-between gap-4 hover:bg-white/[0.02] transition"
                 onClick={() => toggleSection(section.heading)}
               >
-                <h3 className="text-lg font-semibold" style={{ color: unit.accent }}>
-                  {section.heading}
-                </h3>
-                <ChevronDown className={`h-5 w-5 text-[var(--muted)] transition-transform ${expandedSections[section.heading] ? "rotate-180" : ""}`} />
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`shrink-0 h-5 w-5 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
+                      unitProg.completedSections?.includes(section.heading)
+                        ? "border-green-500 bg-green-500/20"
+                        : "border-[var(--border)] hover:border-[var(--accent)]"
+                    }`}
+                    onClick={(e) => { e.stopPropagation(); toggleSectionComplete(section.heading); }}
+                  >
+                    {unitProg.completedSections?.includes(section.heading) && (
+                      <Check className="h-3 w-3 text-green-500" />
+                    )}
+                  </div>
+                  <h3 className="text-lg font-semibold truncate" style={{ color: unitProg.completedSections?.includes(section.heading) ? undefined : unit.accent }}>
+                    {section.heading}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {unitProg.completedSections?.includes(section.heading) && (
+                    <span className="text-[9px] font-black text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">DONE</span>
+                  )}
+                  <ChevronDown className={`h-5 w-5 text-[var(--muted)] transition-transform ${expandedSections[section.heading] ? "rotate-180" : ""}`} />
+                </div>
               </button>
               <AnimatePresence>
                 {expandedSections[section.heading] && (
@@ -910,8 +1002,20 @@ function TopicSearch({ onSelect }) {
 
 export default function TheoryPanel() {
   const [selectedId, setSelectedId] = useState(null);
+  const [savedProgress, setSavedProgress] = useState(() => loadProgress());
 
   const selected = THEORY_UNITS.find((u) => u.id === selectedId);
+
+  const continueUnit = useMemo(() => {
+    const entries = Object.entries(savedProgress).filter(([, p]) => p.lastSection);
+    if (!entries.length) return null;
+    const last = entries.sort((a, b) => {
+      const idxA = THEORY_UNITS.findIndex((u) => u.id === a[0]);
+      const idxB = THEORY_UNITS.findIndex((u) => u.id === b[0]);
+      return idxB - idxA;
+    })[0];
+    return THEORY_UNITS.find((u) => u.id === last[0]) || null;
+  }, [savedProgress]);
 
   if (selected) {
     return <TopicDetail unit={selected} onBack={() => setSelectedId(null)} />;
@@ -978,10 +1082,45 @@ export default function TheoryPanel() {
         </div>
       </div>
 
+      {continueUnit && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="xenon-panel p-5 relative overflow-hidden cursor-pointer group"
+          onClick={() => setSelectedId(continueUnit.id)}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent-soft)] via-transparent to-transparent pointer-events-none" />
+          <div className="relative flex items-center gap-4 flex-wrap">
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ background: `${continueUnit.accent}20` }}>
+              <Play className="h-5 w-5" style={{ color: continueUnit.accent }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Continue where you left off</p>
+              <p className="font-bold text-sm mt-0.5 group-hover:text-[var(--accent)] transition-colors">{continueUnit.title}</p>
+              <p className="text-xs text-[var(--muted)] mt-0.5">
+                Last section: {savedProgress[continueUnit.id]?.lastSection}
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-[var(--muted)] group-hover:text-[var(--accent)] transition-colors shrink-0" />
+          </div>
+        </motion.div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 relative z-0">
-        {THEORY_UNITS.map((unit) => (
-          <TopicCard key={unit.id} unit={unit} onClick={() => setSelectedId(unit.id)} />
-        ))}
+        {THEORY_UNITS.map((unit) => {
+          const uProg = savedProgress[unit.id];
+          const doneCount = uProg?.completedSections?.length || 0;
+          return (
+            <div key={unit.id} className="relative">
+              {doneCount > 0 && (
+                <span className="absolute -top-1 -right-1 z-10 text-[9px] font-black bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full">
+                  {doneCount}/{unit.notes.length}
+                </span>
+              )}
+              <TopicCard unit={unit} onClick={() => setSelectedId(unit.id)} />
+            </div>
+          );
+        })}
       </div>
     </motion.div>
   );

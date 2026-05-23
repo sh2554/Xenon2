@@ -1452,10 +1452,23 @@ export const useAppStore = create((set, get) => ({
   },
 
   redeemPlanCode: async (code) => {
-    const newPlan = REDEEM_CODES[code.trim().toUpperCase()];
+    const trimmed = code.trim().toUpperCase();
+    const newPlan = REDEEM_CODES[trimmed];
     if (!newPlan) throw new Error("Invalid access code.");
     const { user } = get();
     if (!user) throw new Error("Not authenticated.");
+
+    if (newPlan === "resetmock") {
+      const userId = user.id;
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(`xenon-mock-results-${userId}`);
+      }
+      try {
+        await supabase.from("mock_test_results").delete().eq("student_id", userId);
+      } catch { /* table may not exist */ }
+      get().loadMyMockTests();
+      return "Mock test data has been reset.";
+    }
 
     if (typeof window !== "undefined") {
       if (newPlan === "free") {
@@ -1480,6 +1493,40 @@ export const useAppStore = create((set, get) => ({
     set((state) => ({
       profile: state.profile ? { ...state.profile, plan: newPlan } : null,
     }));
+    return `Plan upgraded to ${PLANS[newPlan]?.label || newPlan}!`;
+  },
+
+  shareSnippet: async (code) => {
+    const { user } = get();
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let slug = "";
+    for (let i = 0; i < 6; i++) slug += chars[Math.floor(Math.random() * chars.length)];
+    const snippet = { slug, code, language: "python", owner_id: user?.id || null };
+    const { error } = await supabase.from("shared_snippets").insert(snippet);
+    if (error) {
+      console.error("Supabase share error:", error);
+      // Still save locally as fallback
+    }
+    try {
+      const existing = JSON.parse(localStorage.getItem("xenon-shared-snippets") || "{}");
+      existing[slug] = { code, language: "python", created_at: new Date().toISOString() };
+      localStorage.setItem("xenon-shared-snippets", JSON.stringify(existing));
+    } catch { /* ignore */ }
+    return slug;
+  },
+
+  loadSharedSnippet: async (slug) => {
+    // Check Supabase first so links work cross-browser
+    try {
+      const { data } = await supabase.from("shared_snippets").select("code, language").eq("slug", slug).single();
+      if (data?.code) return data;
+    } catch { /* fall through to localStorage */ }
+    // Fallback to localStorage for same-browser sharing
+    try {
+      const existing = JSON.parse(localStorage.getItem("xenon-shared-snippets") || "{}");
+      if (existing[slug]?.code) return { code: existing[slug].code, language: existing[slug].language || "python" };
+    } catch { /* ignore */ }
+    return null;
   },
 
   leaveCurrentClass: async () => {
@@ -1568,9 +1615,15 @@ export const useAppStore = create((set, get) => ({
     saveMockResult(user.id, enriched);
 
     try {
+      const classId = enrolledClass?.id || null;
+      await supabase.from("mock_test_results").delete().match({
+        student_id: user.id,
+        test_id: test.id,
+        class_id: classId,
+      });
       await supabase.from("mock_test_results").insert({
         student_id: user.id,
-        class_id: enrolledClass?.id || null,
+        class_id: classId,
         test_id: test.id,
         test_type: test.type,
         topic_scores: enriched.topicScores,
@@ -1579,8 +1632,8 @@ export const useAppStore = create((set, get) => ({
         percent: enriched.percent,
         grade: enriched.grade,
       });
-    } catch {
-      /* localStorage fallback when table missing */
+    } catch (e) {
+      console.warn("Mock test Supabase sync skipped:", e?.message);
     }
 
     get().loadMyMockTests();

@@ -4,12 +4,16 @@ export function scorePercent(correct, total) {
 }
 
 export function percentToGrade(pct) {
-  if (pct >= 90) return { grade: "A*", label: "Outstanding", tone: "emerald" };
-  if (pct >= 80) return { grade: "A", label: "Excellent", tone: "emerald" };
-  if (pct >= 70) return { grade: "B", label: "Good", tone: "sky" };
-  if (pct >= 60) return { grade: "C", label: "Pass", tone: "amber" };
-  if (pct >= 50) return { grade: "D", label: "Borderline", tone: "orange" };
-  return { grade: "U", label: "Needs work", tone: "red" };
+  if (pct >= 90) return { grade: "9", label: "Outstanding", tone: "emerald" };
+  if (pct >= 80) return { grade: "8", label: "Excellent", tone: "emerald" };
+  if (pct >= 70) return { grade: "7", label: "Very Good", tone: "sky" };
+  if (pct >= 62) return { grade: "6", label: "Good", tone: "sky" };
+  if (pct >= 55) return { grade: "5", label: "Strong Pass", tone: "amber" };
+  if (pct >= 45) return { grade: "4", label: "Pass", tone: "amber" };
+  if (pct >= 35) return { grade: "3", label: "Developing", tone: "orange" };
+  if (pct >= 25) return { grade: "2", label: "Needs Improvement", tone: "orange" };
+  if (pct >= 15) return { grade: "1", label: "Foundation", tone: "red" };
+  return { grade: "U", label: "Ungraded", tone: "red" };
 }
 
 export function enrichMockResult(result, meta = {}) {

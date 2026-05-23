@@ -9,6 +9,7 @@ import {
   CheckCircle,
   ArrowLeft,
   BarChart3,
+  Terminal,
 } from "lucide-react";
 import clsx from "clsx";
 import { useAppStore } from "../store/useAppStore";
@@ -17,6 +18,7 @@ import { MOCK_TESTS } from "../lib/mockTestCatalog";
 import { getCompletionByTestId } from "../lib/mockTests";
 import { percentToGrade } from "../lib/mockTestGrades";
 import SpecHeatmapGrid from "./SpecHeatmapGrid";
+import MiniIDEModal from "./MiniIDEModal";
 
 const GRADE_RING = {
   emerald: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
@@ -36,6 +38,7 @@ export default function MockTestPanel() {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [lastResult, setLastResult] = useState(null);
+  const [miniIDEQuestion, setMiniIDEQuestion] = useState(null);
 
   const completion = useMemo(() => getCompletionByTestId(myMockResults || []), [myMockResults]);
   const activeTest = MOCK_TESTS.find((t) => t.id === activeTestId) || null;
@@ -75,7 +78,8 @@ export default function MockTestPanel() {
   if (activeTest) {
     const isTheory = activeTest.type === "theory";
     return (
-      <div className="space-y-6">
+      <>
+        <div className="space-y-6">
         <div className="xenon-panel p-6 sm:p-8">
           <button
             type="button"
@@ -119,12 +123,28 @@ export default function MockTestPanel() {
                   ))}
                 </div>
               ) : (
-                <textarea
-                  className="xenon-input w-full font-mono text-sm min-h-[120px]"
-                  value={answers[q.id] ?? q.starterCode ?? ""}
-                  onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                  spellCheck={false}
-                />
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setMiniIDEQuestion(q)}
+                    className="w-full p-4 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-soft)] text-left flex items-center gap-3 hover:bg-[var(--accent-soft)]/80 transition-colors"
+                  >
+                    <Terminal className="h-5 w-5 text-[var(--accent)] shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-[var(--accent)]">
+                        {answers[q.id] ? "Edit code in mini IDE" : "Open mini IDE to write code"}
+                      </p>
+                      {answers[q.id] && (
+                        <p className="text-xs text-[var(--muted)] mt-0.5 truncate">
+                          {answers[q.id].slice(0, 80)}...
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-black text-[var(--muted)] bg-[var(--panel)] px-2 py-1 rounded-full border border-[var(--border)]">
+                      {answers[q.id] ? "EDIT" : "OPEN"}
+                    </span>
+                  </button>
+                </div>
               )}
             </div>
           ))}
@@ -139,6 +159,19 @@ export default function MockTestPanel() {
           </button>
         </div>
       </div>
+
+      {miniIDEQuestion && (
+        <MiniIDEModal
+          question={miniIDEQuestion}
+          onClose={() => setMiniIDEQuestion(null)}
+          onSubmit={(code) => {
+            setAnswers((a) => ({ ...a, [miniIDEQuestion.id]: code }));
+            setMiniIDEQuestion(null);
+          }}
+          onSubmitLabel="Save & Close"
+        />
+      )}
+    </>
     );
   }
 
