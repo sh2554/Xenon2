@@ -766,7 +766,7 @@ main {
 }
 
 .xenon-section-title {
-  font-size: clamp(2rem, 4vw, 3.6rem);
+  font-size: clamp(2rem, 4vw, 4.6rem);
   line-height: 1.02;
   letter-spacing: -0.04em;
   font-weight: 800;
