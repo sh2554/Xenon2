@@ -33,7 +33,7 @@ export default function UpgradeModal({ onClose }) {
           className="xenon-panel w-full max-w-4xl p-8 relative shadow-2xl my-8"
         >
           <button
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-200"
+            className="absolute top-4 right-4 text-[var(--muted)] hover:text-gray-200"
             onClick={onClose}
             type="button"
           >

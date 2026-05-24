@@ -28,7 +28,7 @@ export default function SubscriptionPlanCard({
       </p>
       <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">{plan.tagline}</p>
       <p className="text-[11px] text-[var(--muted)] mt-3 leading-relaxed">
-        <strong className="text-amber-300 font-bold">Pro</strong> = student revision.{" "}
+        <strong className="text-[var(--warning)] font-bold">Pro</strong> = student revision.{" "}
         <strong className="text-violet-300 font-bold">Max</strong> = teacher tools (includes Pro).
       </p>
 

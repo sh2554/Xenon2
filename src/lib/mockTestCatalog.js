@@ -1,4 +1,4 @@
-/** GCSE mock test catalog — 10+ tests, 10 questions each. */
+/** GCSE mock test catalogue — 10+ tests, 10 questions each. */
 
 const tq = (id, topicId, text, answer, options) => ({
   id,

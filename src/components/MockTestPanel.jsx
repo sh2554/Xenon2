@@ -21,11 +21,11 @@ import SpecHeatmapGrid from "./SpecHeatmapGrid";
 import MiniIDEModal from "./MiniIDEModal";
 
 const GRADE_RING = {
-  emerald: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
-  sky: "border-sky-500/40 bg-sky-500/10 text-sky-400",
-  amber: "border-amber-500/40 bg-amber-500/10 text-amber-400",
-  orange: "border-orange-500/40 bg-orange-500/10 text-orange-400",
-  red: "border-red-500/40 bg-red-500/10 text-red-400",
+  emerald: "border-[var(--success)]/40 bg-[var(--success)]/10 text-[var(--success)]",
+  sky: "border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent)]",
+  amber: "border-[var(--warning)]/40 bg-[var(--warning-soft)] text-[var(--warning)]",
+  orange: "border-[var(--warning)]/40 bg-[var(--warning-soft)] text-[var(--warning)]",
+  red: "border-[var(--danger)]/40 bg-[var(--danger)]/10 text-[var(--danger)]",
 };
 
 export default function MockTestPanel() {
@@ -218,9 +218,9 @@ export default function MockTestPanel() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="xenon-panel p-6 border-emerald-500/30 bg-emerald-500/5"
+          className="xenon-panel p-6 border-[var(--success)]/30 bg-[var(--success)]/5"
         >
-          <p className="font-black text-emerald-400 flex items-center gap-2">
+          <p className="font-black text-[var(--success)] flex items-center gap-2">
             <CheckCircle className="h-5 w-5" />
             {lastResult.testTitle} — {lastResult.percent}% · Grade {lastResult.grade}
           </p>
@@ -247,7 +247,7 @@ export default function MockTestPanel() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                   {test.type === "theory" ? (
-                    <BookOpen className="h-5 w-5 text-sky-400 shrink-0" />
+                    <BookOpen className="h-5 w-5 text-[var(--accent)] shrink-0" />
                   ) : (
                     <Code className="h-5 w-5 text-violet-400 shrink-0" />
                   )}
@@ -273,7 +273,7 @@ export default function MockTestPanel() {
                 10 questions · {test.type === "theory" ? "Theory" : "Programming"}
               </p>
               {done ? (
-                <div className="mt-3 flex items-center gap-2 text-xs font-bold text-emerald-400">
+                <div className="mt-3 flex items-center gap-2 text-xs font-bold text-[var(--success)]">
                   <CheckCircle className="h-4 w-4" />
                   Done · {done.percent ?? Math.round((done.totalCorrect / done.totalQuestions) * 100)}%
                 </div>

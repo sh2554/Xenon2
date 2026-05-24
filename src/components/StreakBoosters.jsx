@@ -12,19 +12,19 @@ export function StreakBadge({ streak, compact = false }) {
       className={clsx(
         "flex items-center gap-3 rounded-xl border px-4 py-3",
         streak?.atRisk
-          ? "border-amber-400/40 bg-amber-500/10"
-          : "border-orange-500/25 bg-orange-500/10"
+          ? "border-[var(--warning)]/40 bg-[var(--warning-soft)]"
+          : "border-[var(--warning)]/25 bg-[var(--warning-soft)]"
       )}
     >
       <div className="relative shrink-0">
         <Flame
           className={clsx(
             compact ? "h-6 w-6" : "h-8 w-8",
-            current >= 7 ? "text-amber-400" : "text-orange-500"
+            current >= 7 ? "text-[var(--warning)]" : "text-[var(--warning)]"
           )}
         />
         {streak?.doubleXpActive && (
-          <Zap className="absolute -top-1 -right-1 h-3.5 w-3.5 text-sky-400 fill-sky-400/30" />
+          <Zap className="absolute -top-1 -right-1 h-3.5 w-3.5 text-[var(--accent)] fill-sky-400/30" />
         )}
       </div>
       <div>
@@ -90,26 +90,26 @@ export default function StreakBoosters() {
       </div>
 
       {streak?.message && !streak?.todayActive && (
-        <p className="text-xs font-medium text-amber-300/90 flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+        <p className="text-xs font-medium text-[var(--warning)] flex items-center gap-2 p-3 rounded-xl bg-[var(--warning-soft)] border border-[var(--warning)]/20">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {streak.message}
         </p>
       )}
 
       {status && (
-        <p className="text-xs font-bold text-emerald-400 flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
+        <p className="text-xs font-bold text-[var(--success)] flex items-center gap-2 p-3 rounded-xl bg-[var(--success)]/10 border border-[var(--success)]/25">
           <CheckCircle className="h-4 w-4" />
           {status}
         </p>
       )}
       {err && (
-        <p className="text-xs font-bold text-red-400 p-3 rounded-xl bg-red-500/10 border border-red-500/25">{err}</p>
+        <p className="text-xs font-bold text-[var(--danger)] p-3 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/25">{err}</p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="xenon-panel-muted p-5 flex flex-col gap-4 border border-[var(--border)]">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-xl bg-sky-500/15 flex items-center justify-center text-sky-400">
+            <div className="h-10 w-10 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)]">
               <Snowflake className="h-5 w-5" />
             </div>
             <div>
@@ -120,7 +120,7 @@ export default function StreakBoosters() {
             </div>
           </div>
           {streak?.freezeArmed ? (
-            <span className="text-[10px] font-black uppercase text-sky-400 bg-sky-500/10 px-3 py-2 rounded-lg border border-sky-500/25 text-center">
+            <span className="text-[10px] font-black uppercase text-[var(--accent)] bg-[var(--accent-soft)] px-3 py-2 rounded-lg border border-[var(--accent)]/25 text-center">
               Freeze armed — ready if you miss a day
             </span>
           ) : (
@@ -132,7 +132,7 @@ export default function StreakBoosters() {
 
         <div className="xenon-panel-muted p-5 flex flex-col gap-4 border border-[var(--border)]">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400">
+            <div className="h-10 w-10 rounded-xl bg-[var(--warning-soft)] flex items-center justify-center text-[var(--warning)]">
               <Zap className="h-5 w-5" />
             </div>
             <div>
@@ -143,7 +143,7 @@ export default function StreakBoosters() {
             </div>
           </div>
           {streak?.doubleXpActive ? (
-            <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 px-3 py-2 rounded-lg border border-amber-500/25 flex items-center justify-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-[var(--warning)] bg-[var(--warning-soft)] px-3 py-2 rounded-lg border border-[var(--warning)]/25 flex items-center justify-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
               Active until {doubleXpEnds}
             </span>

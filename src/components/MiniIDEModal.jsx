@@ -7,11 +7,11 @@ import { hasFeature } from "../lib/planFeatures";
 import { X, Play, Send, History, Terminal, CheckCircle, AlertCircle } from "lucide-react";
 
 const GRADE_RING = {
-  emerald: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
-  sky: "border-sky-500/40 bg-sky-500/10 text-sky-400",
-  amber: "border-amber-500/40 bg-amber-500/10 text-amber-400",
-  orange: "border-orange-500/40 bg-orange-500/10 text-orange-400",
-  red: "border-red-500/40 bg-red-500/10 text-red-400",
+  emerald: "border-[var(--success)]/40 bg-[var(--success)]/10 text-[var(--success)]",
+  sky: "border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent)]",
+  amber: "border-[var(--warning)]/40 bg-[var(--warning-soft)] text-[var(--warning)]",
+  orange: "border-[var(--warning)]/40 bg-[var(--warning-soft)] text-[var(--warning)]",
+  red: "border-[var(--danger)]/40 bg-[var(--danger)]/10 text-[var(--danger)]",
 };
 
 /** Mini in-browser Python IDE shown inside a modal for programming mock questions. */
@@ -38,7 +38,7 @@ export default function MiniIDEModal({
 
   // Auto-scroll terminal to bottom
   useEffect(() => {
-    terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    terminalEndRef.current?.scrollIntoView({ behaviour: "smooth" });
   }, [consoleLines]);
 
   useEffect(() => {
@@ -167,9 +167,9 @@ export default function MiniIDEModal({
               {/* Code Editor */}
               <div className="border-r border-[var(--border)] min-h-[280px]">
                 <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--border)] bg-[var(--panel-soft)]">
-                  <div className="h-2.5 w-2.5 rounded-full bg-red-400/80" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-green-400/80" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
                   <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted)] ml-2">
                     solution.py
                   </span>
@@ -227,10 +227,10 @@ export default function MiniIDEModal({
                       <p
                         key={i}
                         className={`whitespace-pre-wrap leading-5 mb-1 ${
-                          line.type === "err" ? "text-red-300" :
-                          line.type === "sys" ? "text-sky-300" :
-                          line.type === "in" ? "text-amber-200 font-bold" :
-                          "text-green-300"
+                          line.type === "err" ? "text-[var(--danger)]" :
+                          line.type === "sys" ? "text-[var(--accent)]" :
+                          line.type === "in" ? "text-[var(--warning)] font-bold" :
+                          "text-[var(--success)]"
                         }`}
                       >
                         {line.type === "in" ? `> ${line.text}` : line.text}
@@ -238,11 +238,11 @@ export default function MiniIDEModal({
                     ))
                   )}
                   {isWaiting && (
-                    <div className="mt-2 flex items-center gap-2 rounded border border-amber-200/40 bg-amber-200/5 px-3 py-2">
-                      <span className="text-sm font-bold text-amber-200">&gt;</span>
+                    <div className="mt-2 flex items-center gap-2 rounded border border-[var(--warning)]/40 bg-[var(--warning-soft)] px-3 py-2">
+                      <span className="text-sm font-bold text-[var(--warning)]">&gt;</span>
                       <input
                         ref={terminalInputRef}
-                        className="w-full bg-transparent text-sm font-bold text-amber-200 outline-none placeholder:text-amber-200/40 caret-amber-200"
+                        className="w-full bg-transparent text-sm font-bold text-[var(--warning)] outline-none placeholder:text-[var(--warning)] caret-amber-200"
                         placeholder="Type your answer and press Enter…"
                         value={termInput}
                         onChange={(e) => setTermInput(e.target.value)}
@@ -276,7 +276,7 @@ export default function MiniIDEModal({
                   <motion.span
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-2 text-emerald-400 font-bold text-sm"
+                    className="flex items-center gap-2 text-[var(--success)] font-bold text-sm"
                   >
                     <CheckCircle className="h-4 w-4" />
                     Answer submitted!

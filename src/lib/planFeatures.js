@@ -1,4 +1,4 @@
-/** Plan tiers, feature gates, and catalog (redeem codes until Stripe). */
+/** Plan tiers, feature gates, and catalogue (redeem codes until Stripe). */
 
 export const REDEEM_CODES = {
   PRO123: "pro",
@@ -102,7 +102,7 @@ export const PLAN_FEATURE_LIST = {
   ],
 };
 
-/** Landing page pricing cards — sourced from catalog above. */
+/** Landing page pricing cards — sourced from catalogue above. */
 export const PRICING_PLANS = [
   {
     id: "free",
@@ -190,7 +190,7 @@ export function getPlanBadge(plan) {
       tier,
       label: "PRO",
       shortLabel: "Pro Member",
-      className: "bg-amber-500/15 text-amber-300 border-amber-400/40",
+      className: "bg-[var(--warning-soft)] text-[var(--warning)] border-[var(--warning)]/40",
       glow: "0 0 12px rgba(251, 191, 36, 0.3)",
     };
   }

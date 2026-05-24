@@ -124,7 +124,7 @@ export default function ProfileThemePicker({ showPreview = true, compact = false
                   <ul className="mt-2 space-y-0.5">
                     {theme.perks.map((perk) => (
                       <li key={perk} className="text-[10px] text-[var(--muted)] flex items-center gap-1.5">
-                        <Check className="h-3 w-3 text-emerald-500 shrink-0" />
+                        <Check className="h-3 w-3 text-[var(--success)] shrink-0" />
                         {perk}
                       </li>
                     ))}
@@ -139,7 +139,7 @@ export default function ProfileThemePicker({ showPreview = true, compact = false
               </div>
 
               {!unlocked ? (
-                <span className="absolute top-4 right-4 text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/25 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                <span className="absolute top-4 right-4 text-[10px] font-bold text-[var(--danger)] bg-[var(--danger)]/10 border border-[var(--danger)]/25 px-2 py-0.5 rounded-lg flex items-center gap-1">
                   <Lock className="h-3 w-3" />
                   {getThemeUnlockHint(theme)}
                 </span>

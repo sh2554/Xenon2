@@ -346,13 +346,13 @@ export default function SettingsPanel() {
                         <div className="flex flex-col">
                           <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-1">Rank</span>
                           <span className="xenon-badge">
-                            <Trophy className="h-3 w-3 text-amber-400" /> {rankBadge?.label || "Unranked"}
+                            <Trophy className="h-3 w-3 text-[var(--warning)]" /> {rankBadge?.label || "Unranked"}
                           </span>
                         </div>
                         <div className="flex flex-col">
                           <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-1">Experience</span>
                           <span className="xenon-badge">
-                            <Zap className="h-3 w-3 text-sky-400" /> {profile?.experience_points || 0} XP
+                            <Zap className="h-3 w-3 text-[var(--accent)]" /> {profile?.experience_points || 0} XP
                           </span>
                         </div>
                         <button 
@@ -428,7 +428,7 @@ export default function SettingsPanel() {
                     </div>
                     <div>
                       <h3 className="text-xl font-black tracking-tight">Portal Theme</h3>
-                      <p className="mt-1 text-sm text-[var(--muted)] font-medium">Personalize your Xenon Code workspace.</p>
+                      <p className="mt-1 text-sm text-[var(--muted)] font-medium">Personalise your Xenon Code workspace.</p>
                     </div>
                   </div>
 
@@ -483,7 +483,7 @@ export default function SettingsPanel() {
                           <p className="text-sm font-bold text-[var(--accent)] opacity-80 uppercase tracking-widest">Class Code: {enrolledClass.class_code}</p>
                         </div>
                       </div>
-                      <button className="xenon-btn-subtle bg-red-500/10 text-red-500 border-none px-6 h-12 font-black" onClick={leaveClass}>Leave Class</button>
+                      <button className="xenon-btn-subtle bg-[var(--danger)]/10 text-[var(--danger)] border-none px-6 h-12 font-black" onClick={leaveClass}>Leave Class</button>
                     </div>
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -513,7 +513,7 @@ export default function SettingsPanel() {
                       <div className="h-16 w-16 rounded-full bg-[var(--accent-soft)] flex items-center justify-center">
                         <Trophy className={clsx(
                           "h-8 w-8",
-                          enrolledClass?.rank === 1 ? "text-amber-400" : enrolledClass?.rank === 2 ? "text-slate-400" : "text-orange-400"
+                          enrolledClass?.rank === 1 ? "text-[var(--warning)]" : enrolledClass?.rank === 2 ? "text-[var(--muted)]" : "text-[var(--warning)]"
                         )} />
                       </div>
                       <div>
@@ -540,7 +540,7 @@ export default function SettingsPanel() {
                       <h3 className="text-xl font-black tracking-tight">Friend Network</h3>
                       <p className="mt-1 text-sm text-[var(--muted)] font-medium">Keep track of your classmates and their progress.</p>
                     </div>
-                    <span className="xenon-badge bg-blue-500/10 text-blue-500 border-none px-4 h-8 font-black">{friends.length} Active Friends</span>
+                    <span className="xenon-badge bg-[var(--accent-soft)] text-[var(--accent)] border-none px-4 h-8 font-black">{friends.length} Active Friends</span>
                   </div>
 
                   <div className="flex gap-3 mb-8">
@@ -596,7 +596,7 @@ export default function SettingsPanel() {
                             <button className="h-9 w-9 rounded-xl bg-[var(--panel-soft)] flex items-center justify-center hover:text-[var(--accent)] transition-colors" onClick={() => openProfilePreview(friendship.friend)} title="View Profile">
                               <User className="h-5 w-5" />
                             </button>
-                            <button className="h-9 w-9 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all" onClick={() => removeFriend(friendship.id)} title="Remove Friend">
+                            <button className="h-9 w-9 rounded-xl bg-[var(--danger)]/10 text-[var(--danger)] flex items-center justify-center hover:bg-[var(--danger)] hover:text-white transition-all" onClick={() => removeFriend(friendship.id)} title="Remove Friend">
                               <Trash2 className="h-5 w-5" />
                             </button>
                           </div>
@@ -607,14 +607,14 @@ export default function SettingsPanel() {
                 )}
 
                 {incomingFriendRequests.length > 0 && (
-                  <div className="xenon-panel p-6 sm:p-8 border-blue-500/30 bg-blue-500/5">
-                    <div className="flex items-center gap-3 mb-6 text-blue-500">
+                  <div className="xenon-panel p-6 sm:p-8 border-[var(--accent)]/30 bg-[var(--accent-soft)]">
+                    <div className="flex items-center gap-3 mb-6 text-[var(--accent)]">
                       <Bell className="h-5 w-5" />
                       <h3 className="text-xs font-black uppercase tracking-widest">Incoming Requests</h3>
                     </div>
                     <div className="space-y-3">
                       {incomingFriendRequests.map((request) => (
-                        <div key={request.id} className="flex items-center justify-between bg-white/60 p-4 rounded-2xl border border-blue-500/10">
+                        <div key={request.id} className="flex items-center justify-between bg-white/60 p-4 rounded-2xl border border-[var(--accent)]/10">
                           <div className="flex items-center gap-3">
                             <ProfileAvatar name={request.friend.full_name || request.friend.username} avatarUrl={request.friend.avatar_url} size="sm" />
                             <p className="font-black text-sm">{request.friend.full_name || request.friend.username}</p>
@@ -675,16 +675,16 @@ export default function SettingsPanel() {
                   </div>
                 </div>
 
-                <div className="xenon-panel p-6 sm:p-8 border-red-500/20 bg-red-500/5">
-                  <h3 className="text-xl font-black tracking-tight text-red-500">Danger Zone</h3>
+                <div className="xenon-panel p-6 sm:p-8 border-[var(--danger)]/20 bg-[var(--danger)]/5">
+                  <h3 className="text-xl font-black tracking-tight text-[var(--danger)]">Danger Zone</h3>
                   <p className="mt-1 text-sm text-[var(--muted)] font-medium mb-8">Permanent actions regarding your Xenon Code account.</p>
                   
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 rounded-2xl border border-red-500/20 bg-white/40">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 rounded-2xl border border-[var(--danger)]/20 bg-white/40">
                     <div>
                       <p className="font-black">Sign Out of All Devices</p>
                       <p className="text-xs text-[var(--muted)] font-medium">You will be required to log in again on all platforms.</p>
                     </div>
-                    <button className="xenon-btn-subtle h-12 px-8 bg-red-500/10 text-red-500 border-none font-black" onClick={() => useAppStore.getState().signOut()}>
+                    <button className="xenon-btn-subtle h-12 px-8 bg-[var(--danger)]/10 text-[var(--danger)] border-none font-black" onClick={() => useAppStore.getState().signOut()}>
                       <LogOut className="mr-2 h-4 w-4" /> Sign Out
                     </button>
                   </div>
@@ -708,7 +708,7 @@ export default function SettingsPanel() {
         )}
         {error && (
           <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }} className="fixed bottom-10 right-10 z-[100]">
-            <div className="xenon-panel bg-red-500 text-white border-none px-6 py-3 shadow-2xl flex items-center gap-3">
+            <div className="xenon-panel bg-[var(--danger)] text-white border-none px-6 py-3 shadow-2xl flex items-center gap-3">
               <X className="h-5 w-5" />
               <p className="text-sm font-black">{error}</p>
               <button onClick={() => setError("")} className="ml-2 hover:opacity-70"><X className="h-4 w-4" /></button>
@@ -727,7 +727,7 @@ export default function SettingsPanel() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="xenon-panel w-full max-w-3xl max-h-full overflow-y-auto shadow-2xl xenon-scroll"
             >
-              <div className="h-32 bg-gradient-to-r from-[var(--accent)] to-sky-400 relative">
+              <div className="h-32 bg-gradient-to-r from-[var(--accent)] to-[var(--accent)] relative">
                 <button className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/20 text-white backdrop-blur flex items-center justify-center hover:bg-black/40 transition-colors" onClick={() => setPreviewProfile(null)}>
                   <X className="h-6 w-6" />
                 </button>

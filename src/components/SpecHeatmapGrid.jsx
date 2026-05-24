@@ -11,14 +11,14 @@ export default function SpecHeatmapGrid({ topics = [], compact = false }) {
         const color = isNa
           ? "border-[var(--border)] bg-[var(--panel-soft)] text-[var(--muted)]"
           : pct >= 90
-            ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400"
+            ? "border-[var(--success)]/50 bg-[var(--success)]/10 text-[var(--success)]"
             : pct >= 70
-              ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-300"
+              ? "border-[var(--success)]/40 bg-[var(--success)]/5 text-[var(--success)]"
               : pct >= 55
-                ? "border-amber-500/50 bg-amber-500/10 text-amber-400"
+                ? "border-[var(--warning)]/50 bg-[var(--warning-soft)] text-[var(--warning)]"
                 : pct >= 35
-                  ? "border-orange-500/50 bg-orange-500/10 text-orange-400"
-                  : "border-red-500/50 bg-red-500/10 text-red-400";
+                  ? "border-[var(--warning)]/50 bg-[var(--warning-soft)] text-[var(--warning)]"
+                  : "border-[var(--danger)]/50 bg-[var(--danger)]/10 text-[var(--danger)]";
 
         return (
           <div key={spec.topicId || spec.topic} className={`p-3 rounded-xl border ${color}`}>

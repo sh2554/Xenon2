@@ -16,9 +16,9 @@ import { PRACTICE_QUESTIONS } from "../lib/practiceQuestions";
 const shuffle = (lines) => [...lines].sort(() => Math.random() - 0.5);
 
 const DIFFICULTY_STYLE = {
-  Easy: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-  Medium: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  Hard: "bg-red-500/15 text-red-400 border-red-500/30",
+  Easy: "bg-[var(--success)]/15 text-[var(--success)] border-[var(--success)]/30",
+  Medium: "bg-[var(--warning-soft)] text-[var(--warning)] border-[var(--warning)]/30",
+  Hard: "bg-[var(--danger)]/15 text-[var(--danger)] border-[var(--danger)]/30",
 };
 
 export default function ParsonsProblem() {
@@ -140,7 +140,7 @@ export default function ParsonsProblem() {
                     >
                       {q.difficulty}
                     </span>
-                    {isDone && <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />}
+                    {isDone && <CheckCircle className="h-4 w-4 text-[var(--success)] shrink-0" />}
                   </div>
                   <p className="font-bold text-sm mt-2 truncate">{q.title}</p>
                 </button>
@@ -169,7 +169,7 @@ export default function ParsonsProblem() {
               </span>
             </div>
             {done && (
-              <p className="text-xs font-bold text-emerald-400 flex items-center gap-1 mb-4">
+              <p className="text-xs font-bold text-[var(--success)] flex items-center gap-1 mb-4">
                 <CheckCircle className="h-4 w-4" /> Completed — pick another to keep practising
               </p>
             )}
@@ -247,7 +247,7 @@ export default function ParsonsProblem() {
               </p>
             )}
             {solved && !message && (
-              <p className="mt-4 text-sm text-emerald-400 font-bold flex items-center gap-1">
+              <p className="mt-4 text-sm text-[var(--success)] font-bold flex items-center gap-1">
                 <CheckCircle className="h-4 w-4" /> Order matches — press Check to submit
               </p>
             )}

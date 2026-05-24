@@ -117,7 +117,7 @@ function HomeView({ profile, enrolledClass, projectsCount, challengeCount, onNav
         <div className="xenon-panel group p-6 transition-all hover:border-[var(--accent)]">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Level Progress</p>
-            <Star className="h-4 w-4 text-amber-400" />
+            <Star className="h-4 w-4 text-[var(--warning)]" />
           </div>
           <p className="mt-4 text-3xl font-black">Level {levelProgress.level}</p>
           <div className="mt-4">
@@ -127,7 +127,7 @@ function HomeView({ profile, enrolledClass, projectsCount, challengeCount, onNav
             </div>
             <div className="challenge-progress-track mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--panel-soft)]">
               <motion.div 
-                className="h-full bg-gradient-to-r from-[var(--accent)] to-sky-400"
+                className="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]"
                 initial={{ width: 0 }}
                 animate={{ width: `${levelProgress.percent}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
@@ -156,7 +156,7 @@ function HomeView({ profile, enrolledClass, projectsCount, challengeCount, onNav
         <div className="xenon-panel p-6">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Saved Work</p>
-            <FolderOpen className="h-4 w-4 text-sky-400" />
+            <FolderOpen className="h-4 w-4 text-[var(--accent)]" />
           </div>
           <p className="mt-4 text-3xl font-black">{projectsCount}</p>
           <p className="mt-2 text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Python Projects</p>
@@ -165,7 +165,7 @@ function HomeView({ profile, enrolledClass, projectsCount, challengeCount, onNav
         <div className="xenon-panel p-6">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">1v1 Battles</p>
-            <Zap className="h-4 w-4 text-amber-400" />
+            <Zap className="h-4 w-4 text-[var(--warning)]" />
           </div>
           <p className="mt-4 text-3xl font-black">{challengeCount}</p>
           <p className="mt-2 text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Active Challenges</p>
@@ -389,14 +389,14 @@ function StudentClassView({ onNavigateToIde }) {
                           <p className="font-semibold">{assignment.title}</p>
                           <p className="mt-1 text-sm text-[var(--muted)]">{parsed.summary || assignment.description}</p>
                           {assignment.due_date ? (
-                            <p className={clsx("mt-1 text-xs font-semibold", isOverdue ? "text-red-500" : "text-[var(--muted)]")}>
+                            <p className={clsx("mt-1 text-xs font-semibold", isOverdue ? "text-[var(--danger)]" : "text-[var(--muted)]")}>
                               Due: {new Date(assignment.due_date).toLocaleDateString()} {isOverdue ? "(overdue)" : ""}
                             </p>
                           ) : null}
                           {hasGoal && !done ? (
                             <div className="mt-3">
                               <div className="flex items-center justify-between text-xs mb-1">
-                                <span className={clsx("font-semibold", goalMet ? "text-green-400" : "text-[var(--accent)]")}>
+                                <span className={clsx("font-semibold", goalMet ? "text-[var(--success)]" : "text-[var(--accent)]")}>
                                   {goalMet
                                     ? `Goal reached — ${questionsCompleted} / ${assignment.question_goal} questions`
                                     : `${questionsCompleted} / ${assignment.question_goal} questions completed`}
@@ -489,11 +489,11 @@ function StudentClassView({ onNavigateToIde }) {
                     <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs">
                       <div>
                         <span className="text-[9px] uppercase font-bold text-[var(--muted)]">Level</span>
-                        <p className="font-black text-sm text-sky-300">{peer.profiles?.level || 1}</p>
+                        <p className="font-black text-sm text-[var(--accent)]">{peer.profiles?.level || 1}</p>
                       </div>
                       <div className="text-right">
                         <span className="text-[9px] uppercase font-bold text-[var(--muted)]">Correct</span>
-                        <p className="font-black text-sm text-green-400">{peer.practice_questions_correct || 0}</p>
+                        <p className="font-black text-sm text-[var(--success)]">{peer.practice_questions_correct || 0}</p>
                       </div>
                     </div>
                   </div>
@@ -677,7 +677,7 @@ function DashboardShell() {
             </div>
             <button 
               onClick={signOut}
-              className="rounded-lg p-2 text-[var(--muted)] hover:bg-red-500/10 hover:text-red-400 transition-colors"
+              className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--danger)]/10 hover:text-[var(--danger)] transition-colors"
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -718,14 +718,14 @@ function DashboardShell() {
                   className={clsx(
                     "flex items-center gap-2 px-4 py-2 rounded-xl border shadow-sm transition-transform hover:scale-105 cursor-default",
                     streak?.atRisk
-                      ? "bg-amber-500/10 text-amber-500 border-amber-500/25"
-                      : "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                      ? "bg-[var(--warning-soft)] text-[var(--warning)] border-[var(--warning)]/25"
+                      : "bg-[var(--warning-soft)] text-[var(--warning)] border-[var(--warning)]/20"
                   )}
                   title={streak?.atRisk ? "Practise today to keep your streak" : `${streak.current} day streak`}
                 >
                   <Flame className="h-4 w-4 fill-current" />
                   <span className="text-sm font-black">{streak?.current || 0}</span>
-                  {streak?.doubleXpActive && <Zap className="h-3.5 w-3.5 text-sky-400" />}
+                  {streak?.doubleXpActive && <Zap className="h-3.5 w-3.5 text-[var(--accent)]" />}
                 </div>
               )}
               <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent-soft)] shadow-sm transition-transform hover:scale-105 cursor-default">
@@ -733,7 +733,7 @@ function DashboardShell() {
                 <span className="text-sm font-black">Level {levelProgress.level}</span>
               </div>
               {isProOrMax(profile?.plan) && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-amber-400/30 bg-amber-500/10">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning-soft)]">
                   <PlanBadge plan={profile?.plan} size="md" showGlow />
                 </div>
               )}
@@ -807,12 +807,12 @@ function DashboardShell() {
       {/* Database Warnings Portal */}
       {Object.keys(databaseWarnings || {}).length > 0 && (
         <div className="fixed bottom-6 right-6 z-[100] max-w-sm pointer-events-none">
-          <div className="xenon-panel border-amber-500/50 bg-amber-500/10 p-5 shadow-2xl backdrop-blur-xl pointer-events-auto">
+          <div className="xenon-panel border-[var(--warning)]/50 bg-[var(--warning-soft)] p-5 shadow-2xl backdrop-blur-xl pointer-events-auto">
             <div className="flex gap-3">
-              <Target className="h-5 w-5 text-amber-500 shrink-0" />
+              <Target className="h-5 w-5 text-[var(--warning)] shrink-0" />
               <div>
-                <p className="text-xs font-black uppercase tracking-wider text-amber-500">System Warning</p>
-                <p className="mt-2 text-[11px] text-amber-200/80 leading-relaxed font-medium">
+                <p className="text-xs font-black uppercase tracking-wider text-[var(--warning)]">System Warning</p>
+                <p className="mt-2 text-[11px] text-[var(--warning)] leading-relaxed font-medium">
                   Database migration required. Run the SQL in <code className="bg-black/20 px-1 rounded">supabase_migrations.sql</code> to enable all portal features.
                 </p>
               </div>

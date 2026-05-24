@@ -279,8 +279,8 @@ export default function ChallengeArena() {
       </div>
 
       {databaseWarnings.challenges || databaseWarnings.progression ? (
-        <div className="xenon-panel border-amber-400/30 bg-amber-500/10 p-4">
-          <p className="text-sm font-semibold text-amber-200">Supabase migration still needed for challenge progression.</p>
+        <div className="xenon-panel border-[var(--warning)]/30 bg-[var(--warning-soft)] p-4">
+          <p className="text-sm font-semibold text-[var(--warning)]">Supabase migration still needed for challenge progression.</p>
           <p className="mt-1 text-sm text-amber-100/90">
             Run the updated migration so friend challenges, XP, and levels can save correctly.
           </p>
@@ -490,8 +490,8 @@ export default function ChallengeArena() {
             )}
           </ChallengeCard>
 
-          {status ? <p className="text-sm text-green-600">{status}</p> : null}
-          {error ? <p className="text-sm text-red-500">{error}</p> : null}
+          {status ? <p className="text-sm text-[var(--success)]">{status}</p> : null}
+          {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
         </div>
       </div>
     </motion.section>

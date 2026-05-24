@@ -98,9 +98,9 @@ function ClassAnnouncementsPanel({ cls }) {
         />
         <button className="xenon-btn self-start" onClick={submit}>Post</button>
       </div>
-      {err && <p className="text-sm text-red-500">{err}</p>}
+      {err && <p className="text-sm text-[var(--danger)]">{err}</p>}
       {databaseWarnings?.announcements && (
-        <p className="text-sm text-amber-400">{databaseWarnings.announcements}</p>
+        <p className="text-sm text-[var(--warning)]">{databaseWarnings.announcements}</p>
       )}
       {!announcements.length ? (
         <p className="text-sm text-[var(--muted)]">No announcements yet.</p>
@@ -145,7 +145,7 @@ function SubmissionItem({ submission: s }) {
         <p className="text-sm font-semibold">
           {s.profiles?.first_name || s.profiles?.username || "Student"}
         </p>
-        <span className="text-[9px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded leading-none border border-emerald-500/25">
+        <span className="text-[9px] font-black uppercase text-[var(--success)] bg-[var(--success)]/10 px-1.5 py-0.5 rounded leading-none border border-[var(--success)]/25">
           Submitted
         </span>
       </div>
@@ -264,8 +264,8 @@ function ClassAssignmentsPanel_DEPRECATED({ cls }) {
           onChange={(e) => setDescription(e.target.value)}
         />
         <button className="xenon-btn" onClick={submit}>Set Assignment</button>
-        {err && <p className="text-sm text-red-500">{err}</p>}
-        {databaseWarnings?.assignments && <p className="text-sm text-amber-400">{databaseWarnings.assignments}</p>}
+        {err && <p className="text-sm text-[var(--danger)]">{err}</p>}
+        {databaseWarnings?.assignments && <p className="text-sm text-[var(--warning)]">{databaseWarnings.assignments}</p>}
       </div>
 
       {!assignments.length ? (
@@ -446,7 +446,7 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
               >
                 <FileDown className="h-4 w-4" /> {exporting ? "Opening report…" : "Export Progress Report (PDF)"}
               </button>
-              {exportError && <p className="w-full text-xs text-red-400 mt-2">{exportError}</p>}
+              {exportError && <p className="w-full text-xs text-[var(--danger)] mt-2">{exportError}</p>}
               {!hasFeature("rosterProgressExport") && (
                 <p className="w-full text-[10px] text-[var(--muted)] mt-2">Requires Max plan — upgrade in Settings.</p>
               )}
@@ -505,7 +505,7 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
                   <h3 className="text-xl font-black tracking-tight">Top Performance</h3>
                   <p className="text-sm text-[var(--muted)]">Calculated by accuracy, streak, and project depth.</p>
                 </div>
-                <Trophy className="h-8 w-8 text-amber-400 opacity-20" />
+                <Trophy className="h-8 w-8 text-[var(--warning)] opacity-20" />
               </div>
               
               <div className="space-y-3">
@@ -529,7 +529,7 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
                       </div>
                       <div className="flex items-center gap-6">
                         <div className="text-right hidden sm:block">
-                          <p className="text-xs font-black text-sky-400">{member.practice_questions_correct || 0}</p>
+                          <p className="text-xs font-black text-[var(--accent)]">{member.practice_questions_correct || 0}</p>
                           <p className="text-[8px] font-black uppercase text-[var(--muted)]">Accuracy</p>
                         </div>
                         <div className="text-right">
@@ -639,7 +639,7 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
                         <tr key={member.student_id} className="group hover:bg-white/[0.02] transition-colors">
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[var(--accent)] to-sky-400 flex items-center justify-center text-white font-black text-xs">
+                              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent)] flex items-center justify-center text-white font-black text-xs">
                                 {(member.profiles?.first_name?.[0] || member.profiles?.username?.[0] || "?").toUpperCase()}
                               </div>
                               <div>
@@ -651,7 +651,7 @@ function ClassDetailView({ cls, onBack, removeStudentFromClass }) {
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-2">
                               <span className="font-black text-sm">{member.practice_questions_correct || 0}</span>
-                              <BarChart3 className="h-3 w-3 text-green-400 opacity-40" />
+                              <BarChart3 className="h-3 w-3 text-[var(--success)] opacity-40" />
                             </div>
                           </td>
                           <td className="px-8 py-6 font-bold text-sm">{member.total_projects || 0}</td>
@@ -842,13 +842,13 @@ export default function ClassDashboard() {
             <div className="space-y-1">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--muted)]">Active Today</p>
               <div className="flex items-center gap-2">
-                <p className="text-3xl font-black text-green-400">—</p>
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <p className="text-3xl font-black text-[var(--success)]">—</p>
+                <div className="h-2 w-2 rounded-full bg-[var(--success)] animate-pulse" />
               </div>
             </div>
             <div className="space-y-1">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--muted)]">Lab Uptime</p>
-              <p className="text-3xl font-black text-sky-400">99.9%</p>
+              <p className="text-3xl font-black text-[var(--accent)]">99.9%</p>
             </div>
           </div>
         </div>
@@ -893,7 +893,7 @@ export default function ClassDashboard() {
                   <button className="xenon-btn h-14 px-10" disabled={creating} onClick={submitCreate}>
                     {creating ? "Initialising..." : "Deploy Class"}
                   </button>
-                  {createError && <p className="text-sm text-red-500 font-bold">{createError}</p>}
+                  {createError && <p className="text-sm text-[var(--danger)] font-bold">{createError}</p>}
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -914,7 +914,7 @@ export default function ClassDashboard() {
                       {joining ? "Joining..." : "Gain Access"}
                     </button>
                   </div>
-                  {joinError && <p className="text-sm text-red-500 font-bold">{joinError}</p>}
+                  {joinError && <p className="text-sm text-[var(--danger)] font-bold">{joinError}</p>}
                 </div>
               )}
             </motion.div>
@@ -924,7 +924,7 @@ export default function ClassDashboard() {
 
       {/* Global Notifications */}
       {joinStatus && !showJoinForm && (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="xenon-panel-muted p-4 border-green-500/20 bg-green-500/5 text-green-400 font-bold text-sm text-center">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="xenon-panel-muted p-4 border-[var(--success)]/20 bg-[var(--success)]/5 text-[var(--success)] font-bold text-sm text-center">
           {joinStatus}
         </motion.div>
       )}

@@ -30,7 +30,7 @@ export default function SharedCodeView() {
 
   // Auto-scroll terminal to bottom
   useEffect(() => {
-    terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    terminalEndRef.current?.scrollIntoView({ behaviour: "smooth" });
   }, [consoleLines]);
 
   // Focus input when waiting
@@ -110,7 +110,7 @@ export default function SharedCodeView() {
     return (
       <div className="xenon-shell flex min-h-screen flex-col items-center justify-center px-4">
         <div className="xenon-panel mx-auto w-full max-w-lg p-10 text-center">
-          <div className="h-16 w-16 mx-auto rounded-2xl bg-red-500/10 flex items-center justify-center text-red-400 mb-6">
+          <div className="h-16 w-16 mx-auto rounded-2xl bg-[var(--danger)]/10 flex items-center justify-center text-[var(--danger)] mb-6">
             <Terminal className="h-8 w-8" />
           </div>
           <h1 className="text-3xl font-black">Snippet not found</h1>
@@ -163,7 +163,7 @@ export default function SharedCodeView() {
             className="xenon-btn-ghost flex items-center gap-2 text-xs px-4 py-2"
             onClick={handleCopyLink}
           >
-            {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+            {copied ? <Check className="h-4 w-4 text-[var(--success)]" /> : <Copy className="h-4 w-4" />}
             {copied ? "Copied!" : "Copy link"}
           </button>
         </div>
@@ -173,9 +173,9 @@ export default function SharedCodeView() {
         {/* Code Editor Panel */}
         <div className="xenon-panel overflow-hidden flex flex-col" style={{ minHeight: "50vh" }}>
           <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--border)] bg-[var(--panel-soft)]">
-            <div className="h-2.5 w-2.5 rounded-full bg-red-400/80" />
-            <div className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
-            <div className="h-2.5 w-2.5 rounded-full bg-green-400/80" />
+            <div className="h-2.5 w-2.5 rounded-full bg-[var(--danger)]/80" />
+            <div className="h-2.5 w-2.5 rounded-full bg-[var(--warning-soft)]" />
+            <div className="h-2.5 w-2.5 rounded-full bg-[var(--success)]/80" />
             <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted)] ml-2">
               snippet.py
             </span>
@@ -228,12 +228,12 @@ export default function SharedCodeView() {
                   key={`${line.text}-${index}`}
                   className={`xenon-code whitespace-pre-wrap text-sm leading-5 mb-1 ${
                     line.type === "err"
-                      ? "text-red-300"
+                      ? "text-[var(--danger)]"
                       : line.type === "sys"
-                        ? "text-sky-300"
+                        ? "text-[var(--accent)]"
                         : line.type === "in"
-                          ? "text-amber-200 font-bold"
-                          : "text-green-300"
+                          ? "text-[var(--warning)] font-bold"
+                          : "text-[var(--success)]"
                   }`}
                 >
                   {line.type === "in" ? `> ${line.text}` : line.text}
@@ -244,11 +244,11 @@ export default function SharedCodeView() {
             )}
 
             {isWaitingForInput && (
-              <div className="mt-2 flex items-center gap-2 rounded border border-amber-200/40 bg-amber-200/5 px-3 py-2">
-                <span className="shrink-0 text-sm font-bold text-amber-200">&gt;</span>
+              <div className="mt-2 flex items-center gap-2 rounded border border-[var(--warning)]/40 bg-[var(--warning-soft)] px-3 py-2">
+                <span className="shrink-0 text-sm font-bold text-[var(--warning)]">&gt;</span>
                 <input
                   ref={terminalInputRef}
-                  className="w-full bg-transparent text-sm font-bold text-amber-200 outline-none placeholder:text-amber-200/40 caret-amber-200"
+                  className="w-full bg-transparent text-sm font-bold text-[var(--warning)] outline-none placeholder:text-[var(--warning)] caret-amber-200"
                   placeholder="Type your answer and press Enter…"
                   value={terminalInput}
                   onChange={(e) => setTerminalInput(e.target.value)}

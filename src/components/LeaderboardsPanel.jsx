@@ -118,7 +118,7 @@ function LeaderboardPodium({ entries, mode, onViewProfile }) {
               </p>
             ) : (
               <div className="mt-2 flex flex-col gap-0.5 w-full px-1">
-                <p className="text-xs font-black text-emerald-400 tabular-nums">
+                <p className="text-xs font-black text-[var(--success)] tabular-nums">
                   {entry.practice_questions_correct || 0} solved
                 </p>
                 <p className="text-xs font-bold text-[var(--muted)] tabular-nums">
@@ -175,7 +175,7 @@ function LeaderboardRow({ entry, rank, mode, onViewProfile }) {
               </span>
             )}
             {showPro && !showMax && (
-              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-amber-400/40 text-amber-300 bg-amber-500/10">
+              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--warning)]/40 text-[var(--warning)] bg-[var(--warning-soft)]">
                 Pro
               </span>
             )}
@@ -204,7 +204,7 @@ function LeaderboardRow({ entry, rank, mode, onViewProfile }) {
           </span>
         ) : (
           <>
-            <span className="text-sm font-black text-emerald-400 tabular-nums flex items-center gap-1">
+            <span className="text-sm font-black text-[var(--success)] tabular-nums flex items-center gap-1">
               <Target className="h-3.5 w-3.5 opacity-70" />
               {entry.practice_questions_correct || 0} solved
             </span>
@@ -224,7 +224,7 @@ function LeaderboardRow({ entry, rank, mode, onViewProfile }) {
             </span>
           ) : (
             <>
-              <span className="text-xs font-black text-emerald-400">{entry.practice_questions_correct || 0} solved</span>
+              <span className="text-xs font-black text-[var(--success)]">{entry.practice_questions_correct || 0} solved</span>
               <span className="text-[10px] font-bold text-[var(--muted)]">{entry.total_projects || 0} proj</span>
             </>
           )}
@@ -318,7 +318,7 @@ function PublicProfileModal({ profile, viewMode, onClose }) {
                 </span>
               )}
               {showPro && !showMax && (
-                <span className="text-[10px] font-black uppercase text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-black uppercase text-[var(--warning)] border border-[var(--warning)]/40 px-2 py-0.5 rounded">
                   Pro plan
                 </span>
               )}
@@ -368,9 +368,9 @@ function PublicProfileModal({ profile, viewMode, onClose }) {
                   className="xenon-panel-muted p-4 text-center border"
                   style={{ borderColor: themeEffect.border, background: themeEffect.bg }}
                 >
-                  <Target className="h-4 w-4 mx-auto mb-2 text-emerald-400" />
+                  <Target className="h-4 w-4 mx-auto mb-2 text-[var(--success)]" />
                   <p className="text-[10px] font-black uppercase text-[var(--muted)]">Questions solved</p>
-                  <p className="text-2xl font-black mt-1 text-emerald-400 tabular-nums">
+                  <p className="text-2xl font-black mt-1 text-[var(--success)] tabular-nums">
                     {profile.practice_questions_correct || 0}
                   </p>
                 </div>
@@ -502,7 +502,7 @@ export default function LeaderboardsPanel({ onOpenSettings }) {
         <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
             <h2 className="text-2xl font-black flex items-center gap-2">
-              <Trophy className="h-7 w-7 text-amber-400" />
+              <Trophy className="h-7 w-7 text-[var(--warning)]" />
               Leaderboards
           </h2>
             <p className="text-sm text-[var(--muted)] mt-1 max-w-xl">
@@ -519,7 +519,7 @@ export default function LeaderboardsPanel({ onOpenSettings }) {
                 onClick={onOpenSettings}
               >
                 <Settings2 className="h-4 w-4" />
-                Customize profile
+                Customise profile
               </button>
             )}
             <div className="flex gap-1 bg-[var(--panel-soft)] p-1 rounded-xl border border-[var(--border)]">

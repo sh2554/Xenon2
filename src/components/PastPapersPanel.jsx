@@ -410,7 +410,7 @@ export default function PastPapersPanel({ onNavigateToIde }) {
     setTotalPoints(total);
     setGraded(true);
     requestAnimationFrame(() => {
-      document.getElementById("theory-grade-results")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      document.getElementById("theory-grade-results")?.scrollIntoView({ behaviour: "smooth", block: "nearest" });
     });
   };
 
@@ -540,12 +540,12 @@ export default function PastPapersPanel({ onNavigateToIde }) {
                   <div className="flex items-center justify-between">
                     <span className="xenon-pill text-[10px] uppercase font-black tracking-widest">{paper.board}</span>
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                      isLocked ? "text-amber-400 bg-amber-500/10" : paper.proOnly ? "text-purple-400 bg-purple-500/10" : "text-emerald-400 bg-emerald-500/10"
+                      isLocked ? "text-[var(--warning)] bg-[var(--warning-soft)]" : paper.proOnly ? "text-purple-400 bg-purple-500/10" : "text-[var(--success)] bg-[var(--success)]/10"
                     }`}>
                       {isLocked ? "Pro required" : paper.proOnly ? "Pro" : "Free"}
                     </span>
                     {isLocked && (
-                      <Lock className="h-5 w-5 text-amber-500" />
+                      <Lock className="h-5 w-5 text-[var(--warning)]" />
                     )}
                   </div>
                   <h3 className="text-xl font-bold mt-4 leading-tight">{paper.paper}</h3>
@@ -617,9 +617,9 @@ export default function PastPapersPanel({ onNavigateToIde }) {
                             className={`p-3 rounded-xl border text-left text-sm font-medium transition-all ${
                               graded 
                                 ? isCorrect 
-                                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                                  ? "border-[var(--success)] bg-[var(--success)]/10 text-[var(--success)]"
                                   : isSelected
-                                    ? "border-red-500 bg-red-500/10 text-red-300"
+                                    ? "border-[var(--danger)] bg-[var(--danger)]/10 text-[var(--danger)]"
                                     : "border-[var(--border)] opacity-60"
                                 : isSelected
                                   ? "border-[var(--accent)] bg-[var(--accent-soft)] text-white"
@@ -669,7 +669,7 @@ export default function PastPapersPanel({ onNavigateToIde }) {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs text-emerald-400 font-mono leading-relaxed"
+                        className="p-4 rounded-xl border border-[var(--success)]/20 bg-[var(--success)]/5 text-xs text-[var(--success)] font-mono leading-relaxed"
                       >
                         <p className="font-bold text-[10px] uppercase tracking-wider mb-1">OCR Official Mark Scheme Guidance:</p>
                         {q.answer}
@@ -688,7 +688,7 @@ export default function PastPapersPanel({ onNavigateToIde }) {
                   id="theory-grade-results"
                   className="xenon-panel p-8 text-center bg-gradient-to-br from-[#0d1726] to-[var(--panel)] border border-[var(--accent)]/30 space-y-4"
                 >
-                  <Trophy className="h-12 w-12 text-amber-400 mx-auto" aria-hidden />
+                  <Trophy className="h-12 w-12 text-[var(--warning)] mx-auto" aria-hidden />
                   <h3 className="text-2xl font-black text-[var(--fg)]">Self-Grading Complete!</h3>
                   <p className="text-4xl font-black text-[var(--accent)]">
                     {score} / {totalPoints}
@@ -726,7 +726,7 @@ export default function PastPapersPanel({ onNavigateToIde }) {
 
                   <p className="text-base font-semibold leading-relaxed">{q.text}</p>
 
-                  <div className="rounded-xl border border-[var(--border)] bg-[#07101a] p-4 font-mono text-xs text-sky-300 leading-relaxed overflow-x-auto">
+                  <div className="rounded-xl border border-[var(--border)] bg-[#07101a] p-4 font-mono text-xs text-[var(--accent)] leading-relaxed overflow-x-auto">
                     <pre>{q.codeTemplate}</pre>
                   </div>
 

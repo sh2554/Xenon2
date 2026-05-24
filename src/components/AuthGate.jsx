@@ -189,7 +189,7 @@ export default function AuthGate({ initialMode = "landing" }) {
 
             <h2 className="text-3xl font-black tracking-tight leading-tight">
               The future of<br />
-              <span className="bg-gradient-to-r from-[var(--accent)] to-sky-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)] bg-clip-text text-transparent">
                 classroom coding
               </span>
             </h2>
@@ -230,7 +230,7 @@ export default function AuthGate({ initialMode = "landing" }) {
           >
             <div className="flex items-center gap-2 mb-1">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-3.5 w-3.5 text-amber-400 fill-amber-400/30" />
+                <Star key={i} className="h-3.5 w-3.5 text-[var(--warning)] fill-amber-400/30" />
               ))}
             </div>
             <p className="text-xs text-[var(--muted)] leading-relaxed italic">
@@ -465,7 +465,7 @@ export default function AuthGate({ initialMode = "landing" }) {
             <AnimatePresence>
               {message && (
                 <motion.p
-                  className="mt-4 text-sm text-green-400 font-medium p-3 rounded-xl bg-green-500/10 border border-green-500/20"
+                  className="mt-4 text-sm text-[var(--success)] font-medium p-3 rounded-xl bg-[var(--success)]/10 border border-[var(--success)]/20"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
@@ -475,7 +475,7 @@ export default function AuthGate({ initialMode = "landing" }) {
               )}
               {error && (
                 <motion.p
-                  className="mt-4 text-sm text-red-400 font-medium p-3 rounded-xl bg-red-500/10 border border-red-500/20"
+                  className="mt-4 text-sm text-[var(--danger)] font-medium p-3 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}

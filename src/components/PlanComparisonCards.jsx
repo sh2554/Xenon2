@@ -24,7 +24,7 @@ export default function PlanComparisonCards({ currentPlan = "free", compact = fa
       plan: PLANS.pro,
       subtitle: "Student upgrade",
       features: PRO_EXCLUSIVE_FEATURES,
-      accent: "border-amber-400/40",
+      accent: "border-[var(--warning)]/40",
       headerNote: "Includes all Free features",
     },
     {
@@ -73,7 +73,7 @@ export default function PlanComparisonCards({ currentPlan = "free", compact = fa
                   <Check
                     className={clsx(
                       "h-3.5 w-3.5 shrink-0 mt-0.5",
-                      t.id === "max" ? "text-violet-400" : t.id === "pro" ? "text-amber-400" : "text-emerald-400"
+                      t.id === "max" ? "text-violet-400" : t.id === "pro" ? "text-[var(--warning)]" : "text-[var(--success)]"
                     )}
                   />
                   <span>{f}</span>

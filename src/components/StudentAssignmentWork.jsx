@@ -23,7 +23,7 @@ function TheoryQuiz({ assignment, onSubmit, submitting, submitted, initialAnswer
   if (submitted && graded) {
     return (
       <div className="xenon-panel p-6 text-center space-y-3">
-        <CheckCircle className="h-10 w-10 text-emerald-400 mx-auto" />
+        <CheckCircle className="h-10 w-10 text-[var(--success)] mx-auto" />
         <p className="text-xl font-black text-[var(--accent)]">
           {graded.earned} / {graded.total}
         </p>
@@ -117,7 +117,7 @@ function ProgrammingTask({ assignment, onSubmit, submitting, submitted, initialC
         </div>
       )}
       {submitted && (
-        <p className="text-sm text-emerald-400 font-bold flex items-center gap-2">
+        <p className="text-sm text-[var(--success)] font-bold flex items-center gap-2">
           <CheckCircle className="h-4 w-4" /> Program submitted to your teacher.
         </p>
       )}
@@ -198,7 +198,7 @@ export default function StudentAssignmentWork({ onOpenIde }) {
               <div className="flex items-center gap-2 mb-2">
                 {isTheory ? <BookOpen className="h-4 w-4 text-[var(--accent)]" /> : <Code className="h-4 w-4 text-[var(--accent)]" />}
                 <span className="text-[9px] font-black uppercase text-[var(--muted)]">{isTheory ? "Theory" : "Programming"}</span>
-                {done && <CheckCircle className="h-4 w-4 text-emerald-400 ml-auto" />}
+                {done && <CheckCircle className="h-4 w-4 text-[var(--success)] ml-auto" />}
               </div>
               <p className="font-bold text-sm">{a.title}</p>
               <p className="text-xs text-[var(--muted)] mt-1 line-clamp-2">{a.summary}</p>

@@ -90,7 +90,7 @@ export const RANK_STYLES = {
     border: "rgba(255, 215, 0, 0.45)",
     bg: "rgba(255, 215, 0, 0.1)",
     glow: "0 0 22px rgba(255, 215, 0, 0.18)",
-    iconClass: "text-amber-400",
+    iconClass: "text-[var(--warning)]",
     ring: "ring-amber-400/50",
   },
   2: {
@@ -106,7 +106,7 @@ export const RANK_STYLES = {
     border: "rgba(205, 127, 50, 0.45)",
     bg: "rgba(205, 127, 50, 0.1)",
     glow: "0 0 16px rgba(205, 127, 50, 0.14)",
-    iconClass: "text-orange-400",
+    iconClass: "text-[var(--warning)]",
     ring: "ring-orange-400/40",
   },
 };

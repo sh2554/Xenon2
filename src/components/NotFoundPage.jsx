@@ -6,7 +6,7 @@ export default function NotFoundPage() {
     <div className="xenon-shell flex min-h-screen flex-col items-center justify-center px-4">
       <div className="xenon-panel mx-auto w-full max-w-lg p-12 text-center">
         <div className="relative mx-auto mb-6 h-24 w-24">
-          <div className="absolute inset-0 rounded-3xl bg-red-500/10 rotate-6" />
+          <div className="absolute inset-0 rounded-3xl bg-[var(--danger)]/10 rotate-6" />
           <div className="absolute inset-0 rounded-3xl bg-[var(--accent-soft)] -rotate-3 flex items-center justify-center">
             <Code className="h-10 w-10 text-[var(--accent)]" />
           </div>

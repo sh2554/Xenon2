@@ -67,7 +67,7 @@ function Flashcard({ card, onKnow, onLearn, cardKey }) {
               minHeight: "300px"
             }}
           >
-            <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-2">
+            <div className="h-12 w-12 rounded-2xl bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)] mb-2">
               <HelpCircle className="h-6 w-6" />
             </div>
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--muted)]">Question — Tap to reveal</span>
@@ -85,10 +85,10 @@ function Flashcard({ card, onKnow, onLearn, cardKey }) {
               minHeight: "300px"
             }}
           >
-            <div className="h-12 w-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500 mb-2">
+            <div className="h-12 w-12 rounded-2xl bg-[var(--success)]/10 flex items-center justify-center text-[var(--success)] mb-2">
               <Check className="h-6 w-6" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-green-500">Correct Answer</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--success)]">Correct Answer</span>
             <p className="text-xl font-bold leading-relaxed text-[var(--text)]">{card.a}</p>
           </div>
         </div>
@@ -102,14 +102,14 @@ function Flashcard({ card, onKnow, onLearn, cardKey }) {
             animate={{ opacity: 1, y: 0 }}
           >
             <button
-              className="rounded-lg border border-red-400/40 bg-red-400/10 px-5 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-400/20 flex items-center gap-2"
+              className="rounded-lg border border-[var(--danger)]/40 bg-[var(--danger)]/10 px-5 py-2.5 text-sm font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20 flex items-center gap-2"
               onClick={(e) => { e.stopPropagation(); onLearn(); }}
             >
               <RotateCcw className="h-4 w-4" />
               Still learning
             </button>
             <button
-              className="rounded-lg border border-green-400/40 bg-green-400/10 px-5 py-2.5 text-sm font-semibold text-green-300 transition hover:bg-green-400/20 flex items-center gap-2"
+              className="rounded-lg border border-[var(--success)]/40 bg-[var(--success)]/10 px-5 py-2.5 text-sm font-semibold text-[var(--success)] transition hover:bg-[var(--success)]/20 flex items-center gap-2"
               onClick={(e) => { e.stopPropagation(); onKnow(); }}
             >
               <Check className="h-4 w-4" />
@@ -333,12 +333,12 @@ function QuizMode({ cards, onExit }) {
             <div 
               key={i} 
               className={`xenon-panel p-4 rounded-xl border-l-4 ${
-                answer.correct ? "border-green-400" : "border-red-400"
+                answer.correct ? "border-[var(--success)]" : "border-[var(--danger)]"
               }`}
             >
               <p className="font-medium text-sm">{answer.question}</p>
               <p className="text-xs text-[var(--muted)] mt-1">Your answer: {answer.userAnswer || "(empty)"}</p>
-              <p className="text-xs text-green-400 mt-1">Correct: {answer.correctAnswer}</p>
+              <p className="text-xs text-[var(--success)] mt-1">Correct: {answer.correctAnswer}</p>
             </div>
           ))}
         </div>
@@ -410,7 +410,7 @@ function QuizMode({ cards, onExit }) {
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Automated Verification</span>
               <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                selfScore === 1 ? "bg-green-500/10 text-green-500" : selfScore === 0.5 ? "bg-yellow-500/10 text-yellow-500" : "bg-red-500/10 text-red-500"
+                selfScore === 1 ? "bg-[var(--success)]/10 text-[var(--success)]" : selfScore === 0.5 ? "bg-yellow-500/10 text-[var(--warning)]" : "bg-[var(--danger)]/10 text-[var(--danger)]"
               }`}>
                 {selfScore === 1 ? <><Check className="h-3 w-3"/> Correct</> : selfScore === 0.5 ? <><Target className="h-3 w-3"/> Partial</> : <><X className="h-3 w-3"/> Incomplete</>}
               </div>
@@ -426,7 +426,7 @@ function QuizMode({ cards, onExit }) {
               <div className="flex justify-center gap-3">
                 <button
                   className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-2 ${
-                    selfScore === 0 ? "bg-red-500/20 border-red-500 text-red-500" : "bg-[var(--panel-soft)] border-transparent text-[var(--muted)] hover:bg-[var(--panel-muted)]"
+                    selfScore === 0 ? "bg-[var(--danger)]/20 border-[var(--danger)] text-[var(--danger)]" : "bg-[var(--panel-soft)] border-transparent text-[var(--muted)] hover:bg-[var(--panel-muted)]"
                   }`}
                   onClick={() => setSelfScore(0)}
                 >
@@ -435,7 +435,7 @@ function QuizMode({ cards, onExit }) {
                 </button>
                 <button
                   className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-2 ${
-                    selfScore === 1 ? "bg-green-500/20 border-green-500 text-green-500" : "bg-[var(--panel-soft)] border-transparent text-[var(--muted)] hover:bg-[var(--panel-muted)]"
+                    selfScore === 1 ? "bg-[var(--success)]/20 border-[var(--success)] text-[var(--success)]" : "bg-[var(--panel-soft)] border-transparent text-[var(--muted)] hover:bg-[var(--panel-muted)]"
                   }`}
                   onClick={() => setSelfScore(1)}
                 >
@@ -479,8 +479,8 @@ function StudyProgress({ unit }) {
   return (
     <div className="flex flex-wrap gap-4 text-sm">
       <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-lg bg-blue-400/20 flex items-center justify-center">
-          <FileText className="h-4 w-4 text-blue-400" />
+        <div className="h-8 w-8 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center">
+          <FileText className="h-4 w-4 text-[var(--accent)]" />
         </div>
         <div>
           <p className="font-medium">{totalNotes} sections</p>
@@ -497,8 +497,8 @@ function StudyProgress({ unit }) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-lg bg-green-400/20 flex items-center justify-center">
-          <Clock className="h-4 w-4 text-green-400" />
+        <div className="h-8 w-8 rounded-lg bg-[var(--success)]/20 flex items-center justify-center">
+          <Clock className="h-4 w-4 text-[var(--success)]" />
         </div>
         <div>
           <p className="font-medium">~{estimatedTime} min</p>
@@ -706,13 +706,13 @@ function TopicDetail({ unit, onBack }) {
                   <div
                     className={`shrink-0 h-5 w-5 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
                       unitProg.completedSections?.includes(section.heading)
-                        ? "border-green-500 bg-green-500/20"
+                        ? "border-[var(--success)] bg-[var(--success)]/20"
                         : "border-[var(--border)] hover:border-[var(--accent)]"
                     }`}
                     onClick={(e) => { e.stopPropagation(); toggleSectionComplete(section.heading); }}
                   >
                     {unitProg.completedSections?.includes(section.heading) && (
-                      <Check className="h-3 w-3 text-green-500" />
+                      <Check className="h-3 w-3 text-[var(--success)]" />
                     )}
                   </div>
                   <h3 className="text-lg font-semibold truncate" style={{ color: unitProg.completedSections?.includes(section.heading) ? undefined : unit.accent }}>
@@ -721,7 +721,7 @@ function TopicDetail({ unit, onBack }) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {unitProg.completedSections?.includes(section.heading) && (
-                    <span className="text-[9px] font-black text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">DONE</span>
+                    <span className="text-[9px] font-black text-[var(--success)] bg-[var(--success)]/10 px-2 py-0.5 rounded-full">DONE</span>
                   )}
                   <ChevronDown className={`h-5 w-5 text-[var(--muted)] transition-transform ${expandedSections[section.heading] ? "rotate-180" : ""}`} />
                 </div>
@@ -1038,7 +1038,7 @@ export default function TheoryPanel() {
                 <Sparkles className="h-3.5 w-3.5" />
                 OCR · AQA · EDEXCEL
               </span>
-              <span className="xenon-pill bg-sky-500/10 text-sky-500 border-none px-4 py-1.5">GCSE Curriculum 2024</span>
+              <span className="xenon-pill bg-[var(--accent-soft)] text-[var(--accent)] border-none px-4 py-1.5">GCSE Curriculum 2024</span>
             </div>
             <h2 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl leading-[1.1]">The Theory Hub</h2>
             <p className="mt-4 text-lg text-[var(--muted)] font-medium leading-relaxed">
@@ -1047,7 +1047,7 @@ export default function TheoryPanel() {
             
             <div className="mt-10 flex flex-wrap gap-10">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
+                <div className="h-12 w-12 rounded-2xl bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)] border border-[var(--accent)]/20">
                   <BookMarked className="h-6 w-6" />
                 </div>
                 <div>
@@ -1065,7 +1065,7 @@ export default function TheoryPanel() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500 border border-green-500/20">
+                <div className="h-12 w-12 rounded-2xl bg-[var(--success)]/10 flex items-center justify-center text-[var(--success)] border border-[var(--success)]/20">
                   <Check className="h-6 w-6" />
                 </div>
                 <div>
@@ -1113,7 +1113,7 @@ export default function TheoryPanel() {
           return (
             <div key={unit.id} className="relative">
               {doneCount > 0 && (
-                <span className="absolute -top-1 -right-1 z-10 text-[9px] font-black bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full">
+                <span className="absolute -top-1 -right-1 z-10 text-[9px] font-black bg-[var(--success)]/20 text-[var(--success)] border border-[var(--success)]/30 px-2 py-0.5 rounded-full">
                   {doneCount}/{unit.notes.length}
                 </span>
               )}

@@ -95,11 +95,11 @@ function ErrorTranslatorButton({ rawError, sourceCode = "" }) {
       <button
         type="button"
         onClick={handleTranslate}
-        className="text-[10px] font-black uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/25 px-2 py-1 rounded-lg flex items-center gap-1.5 transition-all"
+        className="text-[10px] font-black uppercase tracking-wider bg-[var(--danger)]/10 hover:bg-[var(--danger)]/20 text-[var(--danger)] border border-[var(--danger)]/25 px-2 py-1 rounded-lg flex items-center gap-1.5 transition-all"
       >
         <Sparkles className="h-3 w-3" /> Explain with Xenon AI
         {!canExplain && (
-          <span className="text-[8px] bg-amber-500/20 text-amber-200 border border-amber-500/30 px-1.5 py-0.5 rounded ml-1">
+          <span className="text-[8px] bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 px-1.5 py-0.5 rounded ml-1">
             PRO
           </span>
         )}
@@ -361,10 +361,10 @@ export default function XenonIDE() {
   return (
     <div className="space-y-4">
       {userIsPro && (
-        <div className={`xenon-panel px-5 py-3 flex flex-wrap items-center justify-between gap-3 border ${userIsMax ? "border-violet-400/30 bg-gradient-to-r from-violet-500/10 to-amber-500/5" : "border-amber-400/30 bg-gradient-to-r from-amber-500/10 to-transparent"}`}>
+        <div className={`xenon-panel px-5 py-3 flex flex-wrap items-center justify-between gap-3 border ${userIsMax ? "border-violet-400/30 bg-gradient-to-r from-violet-500/10 to-amber-500/5" : "border-[var(--warning)]/30 bg-gradient-to-r from-amber-500/10 to-transparent"}`}>
           <div className="flex items-center gap-3">
             <PlanBadge plan={profile?.plan} size="md" showGlow />
-            <p className="text-sm font-bold text-amber-200/90">
+            <p className="text-sm font-bold text-[var(--warning)]">
               {userIsMax
                 ? "Max plan — includes all Pro features plus teacher class tools."
                 : "Pro plan active — unlimited projects, full past papers, extended theory & IDE skins."}
@@ -447,7 +447,7 @@ export default function XenonIDE() {
               className={`text-sm flex items-center gap-1 ${shareStatus.startsWith("Share link:") ? "cursor-pointer select-all" : ""} text-[var(--accent)]`}
               title={shareStatus.startsWith("Share link:") ? "Click to select, then copy" : undefined}
             >
-              <Link className={`h-3 w-3 ${shareStatus.startsWith("Share link:") ? "text-green-400" : ""} shrink-0`} />
+              <Link className={`h-3 w-3 ${shareStatus.startsWith("Share link:") ? "text-[var(--success)]" : ""} shrink-0`} />
               {shareStatus.startsWith("Share link:") ? (
                 <span className="break-all">{shareStatus}</span>
               ) : (
@@ -463,7 +463,7 @@ export default function XenonIDE() {
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
             <div>
               <h3 className="text-xl font-black text-white flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-amber-400" /> GCSE Challenge Arena
+                <Sparkles className="h-5 w-5 text-[var(--warning)]" /> GCSE Challenge Arena
               </h3>
               <p className="text-xs text-[var(--muted)] mt-1">Select structured exam-spec challenges and solve them in the workspace.</p>
             </div>
@@ -495,13 +495,13 @@ export default function XenonIDE() {
 
           <div className="grid gap-6 lg:grid-cols-[0.45fr_0.55fr]">
             {/* Active Challenge Brief (Left Pane) */}
-            <div className="xenon-panel-muted p-5 flex flex-col justify-between gap-5 border-l-4 border-amber-500">
+            <div className="xenon-panel-muted p-5 flex flex-col justify-between gap-5 border-l-4 border-[var(--warning)]">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-black uppercase bg-amber-500/10 text-amber-400 border border-amber-400/25 px-2 py-0.5 rounded-full">
+                  <span className="text-[9px] font-black uppercase bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/25 px-2 py-0.5 rounded-full">
                     {activeCategory === "algo" ? "Spec Point 2.1" : activeCategory === "debug" ? "Spec Point 2.2" : "Spec Point 2.3"}
                   </span>
-                  <span className="text-[9px] font-black uppercase bg-sky-500/10 text-sky-400 border border-sky-400/25 px-2 py-0.5 rounded-full">
+                  <span className="text-[9px] font-black uppercase bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent)]/25 px-2 py-0.5 rounded-full">
                     AQA / OCR Focus
                   </span>
                 </div>
@@ -514,15 +514,15 @@ export default function XenonIDE() {
                   <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted)]">Suggested GCSE Steps:</p>
                   <ul className="text-xs text-slate-300 space-y-2 leading-relaxed font-sans">
                     <li className="flex items-start gap-2">
-                      <span className="text-amber-400 font-bold">1.</span>
+                      <span className="text-[var(--warning)] font-bold">1.</span>
                       <span>Map out variable inputs (e.g., input values or static parameters).</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-amber-400 font-bold">2.</span>
+                      <span className="text-[var(--warning)] font-bold">2.</span>
                       <span>Structure the core condition / loop logic using correct indentation.</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-amber-400 font-bold">3.</span>
+                      <span className="text-[var(--warning)] font-bold">3.</span>
                       <span>Print user-friendly output text to the console line to confirm correctness.</span>
                     </li>
                   </ul>
@@ -600,12 +600,12 @@ export default function XenonIDE() {
                     <p
                       className={`xenon-code whitespace-pre-wrap text-sm leading-5 ${
                         isErr
-                          ? "text-red-300"
+                          ? "text-[var(--danger)]"
                           : line.type === "sys"
-                            ? "text-sky-300"
+                            ? "text-[var(--accent)]"
                             : line.type === "in"
-                              ? "text-amber-200 font-bold"
-                              : "text-green-300"
+                              ? "text-[var(--warning)] font-bold"
+                              : "text-[var(--success)]"
                       }`}
                     >
                       {line.type === "in" ? `> ${line.text}` : line.text}
@@ -624,11 +624,11 @@ export default function XenonIDE() {
             )}
 
             {isWaitingForInput && (
-              <div className="mt-2 flex items-center gap-2 rounded border border-amber-200/40 bg-amber-200/5 px-3 py-2">
-                <span className="shrink-0 text-sm font-bold text-amber-200">&gt;</span>
+              <div className="mt-2 flex items-center gap-2 rounded border border-[var(--warning)]/40 bg-[var(--warning-soft)] px-3 py-2">
+                <span className="shrink-0 text-sm font-bold text-[var(--warning)]">&gt;</span>
                 <input
                   ref={terminalInputRef}
-                  className="w-full bg-transparent text-sm font-bold text-amber-200 outline-none placeholder:text-amber-200/40 caret-amber-200"
+                  className="w-full bg-transparent text-sm font-bold text-[var(--warning)] outline-none placeholder:text-[var(--warning)] caret-amber-200"
                   placeholder="Type your answer and press Enter…"
                   value={terminalInput}
                   onChange={(e) => setTerminalInput(e.target.value)}
@@ -678,7 +678,7 @@ export default function XenonIDE() {
                   {variables.length > 0 ? (
                     variables.map((v) => (
                       <tr key={v.name} className="hover:bg-white/[0.02]">
-                        <td className="px-4 py-3 font-mono text-sky-400 font-bold">{v.name}</td>
+                        <td className="px-4 py-3 font-mono text-[var(--accent)] font-bold">{v.name}</td>
                         <td className="px-4 py-3 font-mono text-[var(--muted)] truncate max-w-[140px]" title={v.value}>{v.value}</td>
                       </tr>
                     ))
@@ -772,11 +772,11 @@ export default function XenonIDE() {
             
             <div className="p-6 bg-[var(--panel-soft)] border-t border-[var(--border)]">
               {canUseProSkins ? (
-              <span className="text-[9px] font-black uppercase bg-amber-500/10 text-amber-300 border border-amber-400/25 px-1.5 py-0.5 rounded leading-none">
+              <span className="text-[9px] font-black uppercase bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/25 px-1.5 py-0.5 rounded leading-none">
                 Pro feature — unlocked
               </span>
               ) : (
-              <span className="text-[9px] font-black uppercase bg-amber-500/10 text-amber-300 border border-amber-400/25 px-1.5 py-0.5 rounded leading-none">
+              <span className="text-[9px] font-black uppercase bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/25 px-1.5 py-0.5 rounded leading-none">
                 Upgrade to Pro in Settings to unlock
               </span>
               )}

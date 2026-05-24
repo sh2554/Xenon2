@@ -29,7 +29,7 @@ function SubmissionReview({ submission: s }) {
     <div className="rounded-xl border border-[var(--border)] p-4 space-y-3 bg-[var(--panel-soft)]">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-bold">{s.profiles?.first_name || s.profiles?.username || "Student"}</p>
-        <span className="text-[9px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/25">
+        <span className="text-[9px] font-black uppercase text-[var(--success)] bg-[var(--success)]/10 px-2 py-0.5 rounded border border-[var(--success)]/25">
           Submitted
         </span>
       </div>
@@ -50,7 +50,7 @@ function SubmissionReview({ submission: s }) {
       {code && (
         <div className="space-y-2">
           <p className="text-[10px] font-black uppercase text-[var(--muted)]">Submitted code</p>
-          <pre className="text-xs p-3 rounded-lg bg-[#07101a] text-sky-300 overflow-x-auto font-mono whitespace-pre-wrap">
+          <pre className="text-xs p-3 rounded-lg bg-[#07101a] text-[var(--accent)] overflow-x-auto font-mono whitespace-pre-wrap">
             {code}
           </pre>
         </div>
@@ -252,7 +252,7 @@ export default function ClassAssignmentsBuilder({ cls }) {
               <div key={q.id} className="xenon-panel-muted p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-[var(--accent)]">Question {idx + 1}</span>
-                  <button type="button" className="text-[var(--muted)] hover:text-red-400" onClick={() => removeQuestion(q.id)}>
+                  <button type="button" className="text-[var(--muted)] hover:text-[var(--danger)]" onClick={() => removeQuestion(q.id)}>
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -277,7 +277,7 @@ export default function ClassAssignmentsBuilder({ cls }) {
                   />
                 ))}
                 <input
-                  className="xenon-input w-full border-emerald-500/30"
+                  className="xenon-input w-full border-[var(--success)]/30"
                   placeholder="Correct answer / mark scheme"
                   value={q.answer}
                   onChange={(e) => updateQuestion(q.id, "answer", e.target.value)}
@@ -312,8 +312,8 @@ export default function ClassAssignmentsBuilder({ cls }) {
         <button type="button" className="xenon-btn mt-6 w-full sm:w-auto" onClick={submit}>
           Publish to class
         </button>
-        {err && <p className="text-sm text-red-400 mt-3">{err}</p>}
-        {databaseWarnings?.assignments && <p className="text-sm text-amber-400 mt-2">{databaseWarnings.assignments}</p>}
+        {err && <p className="text-sm text-[var(--danger)] mt-3">{err}</p>}
+        {databaseWarnings?.assignments && <p className="text-sm text-[var(--warning)] mt-2">{databaseWarnings.assignments}</p>}
       </div>
 
       <div className="space-y-4">
