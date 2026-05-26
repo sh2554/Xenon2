@@ -4,7 +4,7 @@ import { generateClassCode } from "../lib/classCode";
 import { PRACTICE_QUESTIONS } from "../lib/practiceQuestions";
 import { getChallengeXpBreakdown, getLevelFromXp } from "../lib/progression";
 import { isMissingSupabaseTableError, translateSupabaseError } from "../lib/errorTranslator";
-import { REDEEM_CODES, normalizePlan, isProOrMax as checkProOrMax, isMax as checkMax, hasFeature as checkFeature, getProjectLimit } from "../lib/planFeatures";
+import { PLANS, REDEEM_CODES, normalizePlan, isProOrMax as checkProOrMax, isMax as checkMax, hasFeature as checkFeature, getProjectLimit } from "../lib/planFeatures";
 import { syncStreak, activateStreakFreeze, activateDoubleXp, loadStreakData, isDoubleXpActive } from "../lib/streak";
 import {
   gradeTheoryMock,
