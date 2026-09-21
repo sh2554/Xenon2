@@ -116,7 +116,7 @@ export default function AuthGate({ initialMode = "landing" }) {
   }
 
   return (
-    <div className="xenon-shell min-h-screen flex items-center justify-center px-4 py-12 md:px-6 relative bg-[var(--bg)]">
+    <div className="xenon-shell min-h-screen flex items-center justify-center px-4 py-12 md:px-6 relative bg-transparent">
       {/* Background glow effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--accent)] opacity-[0.04] blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--accent)] opacity-[0.03] blur-[120px] pointer-events-none" />

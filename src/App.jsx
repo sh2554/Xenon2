@@ -81,8 +81,7 @@ function LoadingScreen() {
   }, []);
 
   return (
-    <div className="xenon-shell flex min-h-screen flex-col items-center justify-center px-4 relative">
-      <BackgroundAnimation />
+    <div className="xenon-shell flex min-h-screen flex-col items-center justify-center px-4 relative bg-transparent">
       {/* Subtle background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[var(--accent)] opacity-[0.03] blur-[120px]" />
@@ -552,17 +551,26 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [recoverAuthState]);
 
-  if (!isSharePage && !authHydrated) return <LoadingScreen />;
-  if (!isSharePage && !user) return <AuthGate initialMode="landing" />;
-  if (!isSharePage && user && !profile) return <LoadingScreen />;
-
   return (
     <ErrorBoundary>
-      <Routes>
-        <Route path="/share/:slug" element={<SharedCodeView />} />
-        <Route path="/" element={<DashboardShell />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <div className="relative min-h-screen bg-[var(--bg)] text-[var(--text)] overflow-hidden">
+        <BackgroundAnimation />
+        <div className="relative z-10 min-h-screen flex flex-col">
+          {!isSharePage && !authHydrated ? (
+            <LoadingScreen />
+          ) : !isSharePage && !user ? (
+            <AuthGate initialMode="landing" />
+          ) : !isSharePage && user && !profile ? (
+            <LoadingScreen />
+          ) : (
+            <Routes>
+              <Route path="/share/:slug" element={<SharedCodeView />} />
+              <Route path="/" element={<DashboardShell />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          )}
+        </div>
+      </div>
     </ErrorBoundary>
   );
 }
@@ -669,8 +677,7 @@ function DashboardShell() {
   const levelProgress = getLevelProgress(profile?.experience_points || 0);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--bg)] text-[var(--text)] relative">
-      <BackgroundAnimation />
+    <div className="flex h-screen overflow-hidden bg-transparent text-[var(--text)] relative">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (

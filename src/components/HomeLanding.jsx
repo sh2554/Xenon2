@@ -70,7 +70,7 @@ export default function HomeLanding({ onLogin, onSignup }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0E0E0E] text-[#F3F3F3] selection:bg-[var(--accent)] selection:text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-transparent text-[#F3F3F3] selection:bg-[var(--accent)] selection:text-white font-sans antialiased overflow-x-hidden">
       
       {/* ─── Floating Pill Navbar (guns.lol layout) ─── */}
       <header className="fixed top-5 inset-x-0 z-50 px-4">
