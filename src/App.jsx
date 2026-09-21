@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
 import ErrorBoundary from "./components/ErrorBoundary";
+import BackgroundAnimation from "./components/BackgroundAnimation";
 import AuthGate from "./components/AuthGate";
 import SharedCodeView from "./components/SharedCodeView";
 import NotFoundPage from "./components/NotFoundPage";
@@ -80,7 +81,8 @@ function LoadingScreen() {
   }, []);
 
   return (
-    <div className="xenon-shell flex min-h-screen flex-col items-center justify-center px-4">
+    <div className="xenon-shell flex min-h-screen flex-col items-center justify-center px-4 relative">
+      <BackgroundAnimation />
       {/* Subtle background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[var(--accent)] opacity-[0.03] blur-[120px]" />
@@ -667,7 +669,8 @@ function DashboardShell() {
   const levelProgress = getLevelProgress(profile?.experience_points || 0);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--bg)] text-[var(--text)]">
+    <div className="flex h-screen overflow-hidden bg-[var(--bg)] text-[var(--text)] relative">
+      <BackgroundAnimation />
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (

@@ -1139,6 +1139,7 @@ export const useAppStore = create((set, get) => ({
       await get().updateClassMemberStats({ projectsDelta: 1 });
     }
     if (profile?.role === "student") get().checkAndGrantAchievements().catch(() => {});
+    get().recordStreakActivity();
   },
 
   deleteProject: async (projectId) => {
@@ -1645,8 +1646,8 @@ export const useAppStore = create((set, get) => ({
   },
 
   recordStreakActivity: () => {
-    const { user, profile } = get();
-    if (!user?.id || profile?.role !== "student") return;
+    const { user } = get();
+    if (!user?.id) return;
     try {
       const view = syncStreak(user.id, { markActivity: true });
       set({ streak: view });

@@ -152,6 +152,7 @@ export default function XenonIDE() {
   const setActiveProjectTitle = useAppStore((s) => s.setActiveProjectTitle);
   const queuePracticeTime = useAppStore((s) => s.queuePracticeTime);
   const flushPracticeTime = useAppStore((s) => s.flushPracticeTime);
+  const recordStreakActivity = useAppStore((s) => s.recordStreakActivity);
 
   const shareSnippet = useAppStore((s) => s.shareSnippet);
   const [shareStatus, setShareStatus] = useState("");
@@ -242,6 +243,7 @@ export default function XenonIDE() {
   const runCode = async () => {
     if (isRunning) return;
     setIsRunning(true);
+    recordStreakActivity?.();
     setConsoleLines([{ type: "sys", text: "Starting Python runtime..." }]);
 
     try {
