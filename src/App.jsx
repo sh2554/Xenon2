@@ -247,78 +247,30 @@ function LoadingScreen() {
       </div>
 
       <motion.div
-        className="xenon-panel mx-auto w-full max-w-sm p-9 text-center relative border border-white/10 shadow-2xl bg-[#141414]/90 backdrop-blur-xl rounded-2xl"
-        initial={{ opacity: 0, scale: 0.94 }}
+        className="xenon-panel mx-auto w-full max-w-sm p-8 sm:p-10 text-center relative border border-white/10 shadow-2xl bg-[#141414]/90 backdrop-blur-xl rounded-2xl"
+        initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.45 }}
+        transition={{ duration: 0.4 }}
       >
-        {/* Orbital animation around logo */}
-        <div className="relative mx-auto mb-7 h-20 w-20 flex items-center justify-center">
-          <motion.svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            viewBox="0 0 80 80"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          >
-            <circle
-              cx="40"
-              cy="40"
-              r="36"
-              stroke="rgba(255, 255, 255, 0.08)"
-              strokeWidth="2.5"
-              fill="none"
-            />
-            <circle
-              cx="40"
-              cy="40"
-              r="36"
-              stroke="var(--accent)"
-              strokeWidth="2.5"
-              strokeDasharray="50 170"
-              strokeLinecap="round"
-              fill="none"
-            />
-          </motion.svg>
+        {/* Title at the top */}
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)]">
+          Xenon Code
+        </h1>
 
-          {/* Soft breathing aura */}
-          <motion.div
-            className="absolute inset-2 rounded-2xl bg-[var(--accent)]"
-            animate={{ scale: [0.85, 1.15, 0.85], opacity: [0.15, 0.35, 0.15] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-          />
-
-          {/* Central Logo Box */}
-          <motion.div
-            className="relative h-12 w-12 rounded-xl bg-[#0E0E0E] border border-white/10 flex items-center justify-center shadow-lg"
-            animate={{ y: [-1.5, 1.5, -1.5] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <img src="/favicon.svg" alt="Xenon Code" className="h-8 w-8 object-contain" />
-          </motion.div>
-        </div>
-
-        {/* Dynamic Stage Text */}
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={stage}
-            className="text-sm font-semibold tracking-tight text-[var(--text)]"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.25 }}
-          >
-            {LOADING_STAGES[stage] || LOADING_STAGES[0]}
-          </motion.p>
-        </AnimatePresence>
-
-        {/* Glowing Progress Track */}
-        <div className="mt-4 w-44 h-1 mx-auto bg-white/5 rounded-full overflow-hidden relative">
-          <motion.div
-            className="h-full bg-[var(--accent)] rounded-full shadow-[0_0_10px_var(--accent)]"
-            animate={{ x: ["-100%", "100%"] }}
-            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-            style={{ width: "50%" }}
-          />
+        {/* Loading text at the bottom */}
+        <div className="mt-8">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={stage}
+              className="text-xs sm:text-sm font-medium text-[var(--muted)]"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.2 }}
+            >
+              {LOADING_STAGES[stage] || "Loading Xenon Code..."}
+            </motion.p>
+          </AnimatePresence>
         </div>
 
         {/* First time sign in helper trigger */}
