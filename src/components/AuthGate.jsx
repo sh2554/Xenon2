@@ -316,7 +316,7 @@ export default function AuthGate({ initialMode = "landing" }) {
           </motion.div>
 
           <div className="pt-8 border-t border-[var(--border)] mt-8 text-[10px] font-medium text-[var(--muted)] relative z-10">
-            Seven Kings School - 2026
+            Xenon Code - 2026
           </div>
         </motion.div>
 

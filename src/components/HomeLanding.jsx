@@ -484,10 +484,9 @@ export default function HomeLanding({ onLogin, onSignup }) {
             </button>
           </div>
 
-          {/* Copyright & School Attribution */}
+          {/* Copyright */}
           <div className="text-right text-xs text-[#555555]">
             <p>Copyright © 2026 xenon.code — All Rights Reserved.</p>
-            <p className="text-[10px] text-[#444444] mt-0.5">Seven Kings School Educational Platform</p>
           </div>
         </div>
       </footer>

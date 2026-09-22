@@ -88,7 +88,7 @@ export default function SiteFooter({ onLogin, onSignup }) {
             </div>
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-[var(--muted)]">
-            <p className="tracking-wider">MADE BY SHAHZAIN JEHANGIRI FOR SEVEN KINGS SCHOOL</p>
+            <p className="tracking-wider">MADE BY SHAHZAIN JEHANGIRI</p>
             <p>
               CONTACT:{" "}
               <a
