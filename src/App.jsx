@@ -257,8 +257,37 @@ function LoadingScreen() {
           Xenon Code
         </h1>
 
+        {/* Loading circle */}
+        <div className="relative my-7 mx-auto h-12 w-12 flex items-center justify-center">
+          <motion.svg
+            className="w-full h-full"
+            viewBox="0 0 50 50"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
+          >
+            <circle
+              cx="25"
+              cy="25"
+              r="20"
+              stroke="rgba(255, 255, 255, 0.08)"
+              strokeWidth="3"
+              fill="none"
+            />
+            <circle
+              cx="25"
+              cy="25"
+              r="20"
+              stroke="var(--accent)"
+              strokeWidth="3"
+              strokeDasharray="36 90"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </motion.svg>
+        </div>
+
         {/* Loading text at the bottom */}
-        <div className="mt-8">
+        <div>
           <AnimatePresence mode="wait">
             <motion.p
               key={stage}
