@@ -35,7 +35,7 @@ import {
   Home, Code, BookOpen, FolderOpen, Trophy, Settings, 
   LogOut, Menu, X, Zap, Flame, Star, Award, ChevronRight, ChevronDown, ClipboardCheck,
   User, LayoutDashboard, Target, FileText, ShoppingBag, Sparkles,
-  TrendingUp, Clock, Plus
+  TrendingUp, Clock, Plus, Mail
 } from "lucide-react";
 
 
@@ -72,47 +72,298 @@ const LOAD_HINTS = [
   { after: 18000, text: "Account not found or session expired. Try refreshing the page or signing in again." },
 ];
 
+const LOADING_STAGES = [
+  "Initialising Xenon workspace...",
+  "Loading Python 3.11 runtime...",
+  "Preparing editor & session...",
+];
+
 function LoadingScreen() {
+  const user = useAppStore((s) => s.user);
+  const signOut = useAppStore((s) => s.signOut);
+  const resendVerificationEmail = useAppStore((s) => s.resendVerificationEmail);
+
   const [hint, setHint] = useState(null);
+  const [stage, setStage] = useState(0);
+  const [showEmailNotice, setShowEmailNotice] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resentSuccess, setResentSuccess] = useState(false);
+  const [resendError, setResendError] = useState("");
+
+  const isUnconfirmed = Boolean(user && !user.email_confirmed_at && !user.confirmed_at);
 
   useEffect(() => {
+    if (isUnconfirmed) {
+      setShowEmailNotice(true);
+      return;
+    }
+    const emailPromptTimer = setTimeout(() => {
+      setShowEmailNotice(true);
+    }, 5500);
+    return () => clearTimeout(emailPromptTimer);
+  }, [isUnconfirmed]);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setStage(1), 1400);
+    const t2 = setTimeout(() => setStage(2), 2800);
     const timers = LOAD_HINTS.map(({ after, text }) => setTimeout(() => setHint(text), after));
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      timers.forEach(clearTimeout);
+    };
   }, []);
 
+  const handleResend = async () => {
+    const email = user?.email;
+    if (!email) {
+      setResendError("No email address found to resend confirmation.");
+      return;
+    }
+    setResending(true);
+    setResendError("");
+    setResentSuccess(false);
+    try {
+      if (resendVerificationEmail) {
+        await resendVerificationEmail(email);
+      }
+      setResentSuccess(true);
+    } catch (err) {
+      setResendError(err?.message || "Failed to resend confirmation email.");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  // Claude.ai inspired Check Your Emails screen
+  if (isUnconfirmed || (showEmailNotice && user && !user.email_confirmed_at)) {
+    return (
+      <div className="xenon-shell flex min-h-screen flex-col items-center justify-center px-4 py-12 relative bg-transparent">
+        {/* Soft background glow */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] rounded-full bg-[var(--accent)] opacity-[0.04] blur-[120px]" />
+        </div>
+
+        <motion.div
+          className="w-full max-w-lg mx-auto text-center relative z-10 px-4"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+        >
+          {/* Top Monogram Mark (Claude AI style) */}
+          <div className="flex justify-center mb-6">
+            <div className="h-14 w-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center shadow-xl shadow-[var(--accent-glow)]">
+              <span className="font-mono font-bold text-white text-xl tracking-tight">XC</span>
+            </div>
+          </div>
+
+          {/* Heading */}
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mb-8">
+            Sign in to Xenon Code
+          </h1>
+
+          {/* Claude-style dark center card */}
+          <div className="w-full bg-[#141414] border border-white/10 rounded-2xl p-7 sm:p-9 shadow-2xl mb-7 relative overflow-hidden">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-sm font-mono text-[var(--accent-light)] mb-3 max-w-full truncate">
+              <Mail className="h-4 w-4 shrink-0 text-[var(--accent)]" />
+              <span className="truncate">{user?.email || "Verification Link Sent"}</span>
+            </div>
+            <p className="text-xs uppercase tracking-wider font-semibold text-[var(--muted)]">
+              Check your emails
+            </p>
+          </div>
+
+          {/* Subtext matching Claude */}
+          <p className="text-sm sm:text-base text-[var(--muted)] leading-relaxed max-w-md mx-auto mb-8">
+            Click the temporary confirmation link sent to your email to sign in. If you didn't try to sign in, you can safely ignore this email.
+          </p>
+
+          {/* Action buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xs mx-auto mb-8">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              className="w-full py-2.5 px-5 rounded-lg bg-[var(--accent)] text-white font-medium text-xs hover:brightness-110 transition-all disabled:opacity-50 shadow-md shadow-[var(--accent-glow)]"
+            >
+              {resending ? "Sending..." : "Resend email"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                signOut();
+                window.location.reload();
+              }}
+              className="w-full py-2.5 px-5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 text-xs font-medium text-[var(--text)] transition-all"
+            >
+              Back to Sign In
+            </button>
+          </div>
+
+          {resentSuccess && (
+            <motion.p
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs text-[#34d399] mb-6 font-medium"
+            >
+              Verification email resent! Check your inbox.
+            </motion.p>
+          )}
+
+          {resendError && (
+            <motion.p
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs text-[#ef4444] mb-6 font-medium"
+            >
+              {resendError}
+            </motion.p>
+          )}
+
+          {/* Footer - Anthropic style */}
+          <div className="pt-8 border-t border-white/5 text-center">
+            <div className="font-mono text-xs font-bold tracking-[0.25em] text-[var(--muted)]/60 uppercase">
+              XENON CODE
+            </div>
+            <div className="mt-2 text-xs text-[var(--muted)]/50 flex items-center justify-center gap-2">
+              <span>xenoncode.xyz</span>
+              <span>•</span>
+              <span>Python IDE</span>
+              <span>•</span>
+              <span>Schools</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Enhanced animated loading screen
   return (
     <div className="xenon-shell flex min-h-screen flex-col items-center justify-center px-4 relative bg-transparent">
-      {/* Subtle background glow */}
+      {/* Ambient background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[var(--accent)] opacity-[0.03] blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[var(--accent)] opacity-[0.04] blur-[140px]" />
       </div>
-      
-      <motion.div 
-        className="xenon-panel mx-auto w-full max-w-sm p-10 text-center relative"
-        initial={{ opacity: 0, scale: 0.95 }}
+
+      <motion.div
+        className="xenon-panel mx-auto w-full max-w-sm p-9 text-center relative border border-white/10 shadow-2xl bg-[#141414]/90 backdrop-blur-xl rounded-2xl"
+        initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.45 }}
       >
-        <img src="/favicon.svg" alt="Xenon Code" className="mx-auto mb-6 h-14 w-14 rounded-2xl shadow-xl shadow-[var(--accent-glow)]" />
-        <p className="text-base font-semibold">Loading Xenon Code...</p>
-        <div className="mt-4 flex justify-center gap-2">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="inline-block h-2 w-2 rounded-full bg-[var(--accent)]"
-              style={{ animation: `pulse 1.2s ease-in-out ${i * 0.3}s infinite` }}
+        {/* Orbital animation around logo */}
+        <div className="relative mx-auto mb-7 h-20 w-20 flex items-center justify-center">
+          <motion.svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox="0 0 80 80"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          >
+            <circle
+              cx="40"
+              cy="40"
+              r="36"
+              stroke="rgba(255, 255, 255, 0.08)"
+              strokeWidth="2.5"
+              fill="none"
             />
-          ))}
+            <circle
+              cx="40"
+              cy="40"
+              r="36"
+              stroke="var(--accent)"
+              strokeWidth="2.5"
+              strokeDasharray="50 170"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </motion.svg>
+
+          {/* Soft breathing aura */}
+          <motion.div
+            className="absolute inset-2 rounded-2xl bg-[var(--accent)]"
+            animate={{ scale: [0.85, 1.15, 0.85], opacity: [0.15, 0.35, 0.15] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          />
+
+          {/* Central Logo Box */}
+          <motion.div
+            className="relative h-12 w-12 rounded-xl bg-[#0E0E0E] border border-white/10 flex items-center justify-center shadow-lg"
+            animate={{ y: [-1.5, 1.5, -1.5] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <img src="/favicon.svg" alt="Xenon Code" className="h-8 w-8 object-contain" />
+          </motion.div>
         </div>
-        {hint ? (
-          <motion.p 
-            className="mt-6 text-xs leading-relaxed text-[var(--muted)]"
-            initial={{ opacity: 0, y: 5 }}
+
+        {/* Dynamic Stage Text */}
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={stage}
+            className="text-sm font-semibold tracking-tight text-[var(--text)]"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.25 }}
+          >
+            {LOADING_STAGES[stage] || LOADING_STAGES[0]}
+          </motion.p>
+        </AnimatePresence>
+
+        {/* Glowing Progress Track */}
+        <div className="mt-4 w-44 h-1 mx-auto bg-white/5 rounded-full overflow-hidden relative">
+          <motion.div
+            className="h-full bg-[var(--accent)] rounded-full shadow-[0_0_10px_var(--accent)]"
+            animate={{ x: ["-100%", "100%"] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+            style={{ width: "50%" }}
+          />
+        </div>
+
+        {/* First time sign in helper trigger */}
+        {showEmailNotice && (
+          <motion.div
+            className="mt-6 pt-4 border-t border-white/5"
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            {hint}
-          </motion.p>
-        ) : null}
+            <p className="text-xs text-[var(--muted)] mb-2">
+              First time signing in?
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowEmailNotice(true)}
+              className="text-xs font-semibold text-[var(--accent)] hover:underline inline-flex items-center gap-1.5"
+            >
+              <Mail className="h-3 w-3" />
+              Check your emails
+            </button>
+          </motion.div>
+        )}
+
+        {/* Hint text if taking longer */}
+        {hint && (
+          <motion.div
+            className="mt-4 pt-4 border-t border-white/5"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className="text-xs leading-relaxed text-[var(--muted)]">
+              {hint}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                signOut();
+                window.location.reload();
+              }}
+              className="mt-2 text-xs text-[var(--muted)] hover:text-[var(--text)] underline font-medium inline-block"
+            >
+              Return to Sign In
+            </button>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

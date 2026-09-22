@@ -36,11 +36,14 @@ const formVariants = {
 };
 
 export default function AuthGate({ initialMode = "landing" }) {
-  const { signIn, signUp, signInWithGoogle } = useAppStore();
+  const { signIn, signUp, signInWithGoogle, resendVerificationEmail } = useAppStore();
   const [mode, setMode] = useState(initialMode);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -50,6 +53,33 @@ export default function AuthGate({ initialMode = "landing" }) {
     role: "none",
   });
   const [focusedField, setFocusedField] = useState(null);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
+
+  const handleResend = async () => {
+    if (!form.email) {
+      setError("Please provide your email address to resend confirmation.");
+      return;
+    }
+    setResendLoading(true);
+    setResendMessage("");
+    setError("");
+    try {
+      if (resendVerificationEmail) {
+        await resendVerificationEmail(form.email);
+      }
+      setResendMessage("Verification email resent! Check your inbox.");
+      setResendCooldown(60);
+    } catch (err) {
+      setError(err?.message || "Failed to resend confirmation email.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -67,12 +97,16 @@ export default function AuthGate({ initialMode = "landing" }) {
         if (data?.session?.user) {
           setMessage("Account created! Entering workspace...");
         } else {
-          setMessage("Account created! Check your email if verification is required, then sign in.");
-          setMode("signin");
+          setMode("verify-email");
         }
       }
     } catch (err) {
       console.error("Auth Error:", err);
+      const rawMsg = String(err?.message || err?.error_description || err?.error || "").toLowerCase();
+      if (rawMsg.includes("email not confirmed") || rawMsg.includes("not confirmed") || rawMsg.includes("verification")) {
+        setMode("verify-email");
+        return;
+      }
       let errorMsg = "Authentication failed.";
       if (err?.message) {
         errorMsg = err.message;
@@ -112,6 +146,108 @@ export default function AuthGate({ initialMode = "landing" }) {
         onSignup={() => setMode("signup")} 
         onLogin={() => setMode("signin")} 
       />
+    );
+  }
+
+  // Claude.ai inspired Check Your Emails screen
+  if (mode === "verify-email") {
+    return (
+      <div className="xenon-shell min-h-screen flex items-center justify-center px-4 py-12 relative bg-transparent">
+        {/* Soft background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] rounded-full bg-[var(--accent)] opacity-[0.04] blur-[120px] pointer-events-none" />
+
+        <motion.div
+          className="w-full max-w-lg mx-auto text-center relative z-10 px-4"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+        >
+          {/* Top Logo Mark (Claude AI style) */}
+          <div className="flex justify-center mb-6">
+            <div className="h-14 w-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center shadow-xl shadow-[var(--accent-glow)]">
+              <span className="font-mono font-bold text-white text-xl tracking-tight">XC</span>
+            </div>
+          </div>
+
+          {/* Heading */}
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mb-8">
+            Sign in to Xenon Code
+          </h1>
+
+          {/* Claude-style dark center card */}
+          <div className="w-full bg-[#141414] border border-white/10 rounded-2xl p-7 sm:p-9 shadow-2xl mb-7 relative overflow-hidden">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-sm font-mono text-[var(--accent-light)] mb-3 max-w-full truncate">
+              <Mail className="h-4 w-4 shrink-0 text-[var(--accent)]" />
+              <span className="truncate">{form.email || "Verification Link Sent"}</span>
+            </div>
+            <p className="text-xs uppercase tracking-wider font-semibold text-[var(--muted)]">
+              Check your emails
+            </p>
+          </div>
+
+          {/* Subtext matching Claude */}
+          <p className="text-sm sm:text-base text-[var(--muted)] leading-relaxed max-w-md mx-auto mb-8">
+            Click the temporary confirmation link sent to your email to sign in. If you didn't try to sign in, you can safely ignore this email.
+          </p>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xs mx-auto mb-8">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resendCooldown > 0 || resendLoading}
+              className="w-full py-2.5 px-5 rounded-lg bg-[var(--accent)] text-white font-medium text-xs hover:brightness-110 transition-all disabled:opacity-50 shadow-md shadow-[var(--accent-glow)]"
+            >
+              {resendLoading ? "Sending..." : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend email"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("signin");
+                setError("");
+                setMessage("");
+              }}
+              className="w-full py-2.5 px-5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 text-xs font-medium text-[var(--text)] transition-all"
+            >
+              Back to Sign In
+            </button>
+          </div>
+
+          {resendMessage && (
+            <motion.p
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs text-[#34d399] mb-6 font-medium"
+            >
+              {resendMessage}
+            </motion.p>
+          )}
+
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs text-[#ef4444] mb-6 font-medium"
+            >
+              {error}
+            </motion.p>
+          )}
+
+          {/* Footer - Anthropic style */}
+          <div className="pt-8 border-t border-white/5 text-center">
+            <div className="font-mono text-xs font-bold tracking-[0.25em] text-[var(--muted)]/60 uppercase">
+              XENON CODE
+            </div>
+            <div className="mt-2 text-xs text-[var(--muted)]/50 flex items-center justify-center gap-2">
+              <span>xenoncode.xyz</span>
+              <span>•</span>
+              <span>Python IDE</span>
+              <span>•</span>
+              <span>Schools</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
     );
   }
 

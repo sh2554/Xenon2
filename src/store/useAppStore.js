@@ -674,6 +674,17 @@ export const useAppStore = create((set, get) => ({
     if (error) throw error;
   },
 
+  resendVerificationEmail: async (email) => {
+    if (!email) throw new Error("Email address is required.");
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    if (error) throw error;
+    return true;
+  },
+
   signOut: async () => {
     set({ authHydrated: false });
     try {
